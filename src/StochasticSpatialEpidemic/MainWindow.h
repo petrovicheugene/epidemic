@@ -11,6 +11,18 @@ class MainWindow : public ZBaseMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+
+private:
+    // VARS
+    void zh_createComponents();
+    void zh_createConnections();
+
+    //FUNCS
+
+
+
+
 };
 //============================================================
 #endif // MAINWINDOW_H
