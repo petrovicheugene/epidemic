@@ -1,8 +1,5 @@
 //============================================================
-#include "ZGroupDynamicWidget.h"
+#include "ZAbstractEpidemicProcess.h"
 //============================================================
-ZGroupDynamicWidget::ZGroupDynamicWidget(QWidget *parent) : QWidget(parent)
-{
-
-}
+ZAbstractEpidemicProcess::ZAbstractEpidemicProcess(QObject* parent) : QObject(parent) {}
 //============================================================

@@ -1,29 +1,24 @@
 //============================================================
-#ifndef ZPOPULATIONWIDGET_H
-#define ZPOPULATIONWIDGET_H
+#ifndef ZHETEROGENEOUSPOPULATIONDASHBOARD_H
+#define ZHETEROGENEOUSPOPULATIONDASHBOARD_H
 //============================================================
-#include <QWidget>
-#include <QtCharts>
+#include <ZAbstractDashBoard.h>
 //============================================================
-using namespace QtCharts;
-//============================================================
-class ZPopulationWidget : public QWidget
+class ZHeterogeneousPopulationDashBoard : public ZAbstractDashBoard
 {
     Q_OBJECT
 public:
-    explicit ZPopulationWidget(QWidget *parent = nullptr);
+    explicit ZHeterogeneousPopulationDashBoard(QWidget* parent = nullptr);
+    bool zp_connect(QObject* component) override;
 
 signals:
 
 private:
-
     // VARS
-    QChartView* zv_chartView;
 
     // FUNCS
     void zh_createComponents();
     void zh_createConnections();
-
 };
 //============================================================
-#endif // ZPOPULATIONWIDGET_H
+#endif // ZHETEROGENEOUSPOPULATIONDASHBOARD_H

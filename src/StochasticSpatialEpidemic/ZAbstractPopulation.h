@@ -1,17 +1,19 @@
 //============================================================
-#ifndef ZGROUPDYNAMICWIDGET_H
-#define ZGROUPDYNAMICWIDGET_H
+#ifndef ZABSTRACTPOPULATION_H
+#define ZABSTRACTPOPULATION_H
 //============================================================
-#include <QWidget>
+#include <QObject>
 //============================================================
-class ZGroupDynamicWidget : public QWidget
+class ZAbstractPopulation : public QObject
 {
     Q_OBJECT
 public:
-    explicit ZGroupDynamicWidget(QWidget *parent = nullptr);
+    explicit ZAbstractPopulation(QObject* parent = nullptr);
+
+    virtual void zp_generate() = 0;
 
 signals:
 
 };
 //============================================================
-#endif // ZGROUPDYNAMICWIDGET_H
+#endif // ZABSTRACTPOPULATION_H

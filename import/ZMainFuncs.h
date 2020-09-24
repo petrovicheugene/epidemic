@@ -90,7 +90,8 @@ void messageHandler(QtMsgType type, const QMessageLogContext& context, const QSt
     }
 }
 
-template <typename MainWindow> int mainActions(int argc, char* argv[])
+template<typename MainWindow>
+int mainActions(int argc, char* argv[])
 {
     QTextCodec* codec = QTextCodec::codecForName("windows-1251");
     QTextCodec::setCodecForLocale(codec);
@@ -122,10 +123,9 @@ template <typename MainWindow> int mainActions(int argc, char* argv[])
     qApp->setProperty("appDescription", QString(APP_DESCRIPTION));
 #endif
 
-    qApp->setStyleSheet("QSplitter::handle:vertical {height: 4px; image: "
-                        "url(:/images/ZImages/vSplitterHandler.png);}"
-                        "QSplitter::handle:horizontal {width: 4px; image: "
-                        "url(:/images/ZImages/hSplitterHandler.png);}");
+    qApp->setStyleSheet(" QSplitter::handle:horizontal {border: 1px outset darkgrey;} "
+                        " QSplitter::handle:vertical{border: 1px outset darkgrey;}");
+
     QOperatingSystemVersion currentOS = QOperatingSystemVersion::current();
     if (currentOS >= QOperatingSystemVersion(QOperatingSystemVersion::Windows10))
     {

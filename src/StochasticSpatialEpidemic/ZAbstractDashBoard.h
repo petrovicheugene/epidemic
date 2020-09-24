@@ -1,17 +1,17 @@
 //============================================================
-#ifndef ZDASHBOARD_H
-#define ZDASHBOARD_H
+#ifndef ZABSTRACTEPIDEMICPROCESSDASHBOARD_H
+#define ZABSTRACTEPIDEMICPROCESSDASHBOARD_H
 //============================================================
 #include <QWidget>
 //============================================================
-class ZDashBoard : public QWidget
+class ZAbstractDashBoard : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ZDashBoard(QWidget *parent = nullptr);
-
+    explicit ZAbstractDashBoard(QWidget* parent = nullptr);
+    virtual bool zp_connect(QObject* component) = 0;
 signals:
 
 };
 //============================================================
-#endif // ZDASHBOARD_H
+#endif // ZABSTRACTEPIDEMICPROCESSDASHBOARD_H

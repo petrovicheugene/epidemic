@@ -1,5 +1,5 @@
-QT       += core gui
-
+QT += core gui
+QT += charts
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 
@@ -36,17 +36,35 @@ include( ../../app.pri )
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ZDashBoard.cpp \
-    ZGroupDynamicWidget.cpp \
+    ZAbstractDashBoard.cpp \
+    ZAbstractEpidemicProcess.cpp \
+    ZAbstractFactory.cpp \
+    ZAbstractPopulation.cpp \
+    ZEpidemicDynamicWidget.cpp \
+    ZHeterogeneousPopulation.cpp \
+    ZHeterogeneousPopulationDashBoard.cpp \
     ZPopulationWidget.cpp \
+    ZRandom2DPositionGenerator.cpp \
+    ZStochasticHeterogeneousSIRFactory.cpp \
+    ZStochasticHeterogeneousSIRProcess.cpp \
+    ZStochasticHeterogeneousSIRProcessDashBoard.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     MainWindow.h \
-    ZDashBoard.h \
-    ZGroupDynamicWidget.h \
-    ZPopulationWidget.h
+    ZAbstractDashBoard.h \
+    ZAbstractEpidemicProcess.h \
+    ZAbstractFactory.h \
+    ZAbstractPopulation.h \
+    ZEpidemicDynamicWidget.h \
+    ZHeterogeneousPopulation.h \
+    ZHeterogeneousPopulationDashBoard.h \
+    ZPopulationWidget.h \
+    ZRandom2DPositionGenerator.h \
+    ZStochasticHeterogeneousSIRFactory.h \
+    ZStochasticHeterogeneousSIRProcess.h \
+    ZStochasticHeterogeneousSIRProcessDashBoard.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

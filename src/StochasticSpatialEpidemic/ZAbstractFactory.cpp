@@ -1,7 +1,7 @@
 //============================================================
-#include "ZDashBoard.h"
+#include "ZAbstractFactory.h"
 //============================================================
-ZDashBoard::ZDashBoard(QWidget *parent) : QWidget(parent)
+ZAbstractFactory::ZAbstractFactory(QObject *parent) : QObject(parent)
 {
 
 }
