@@ -5,7 +5,10 @@
 #include "ZAbstractDashBoard.h"
 #include "ZAbstractEpidemicProcess.h"
 #include "ZAbstractPopulation.h"
+#include "ZAbstractPopulationWidget.h"
 
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QObject>
 //============================================================
 class ZAbstractFactory : public QObject
@@ -17,6 +20,7 @@ public:
     virtual ZAbstractEpidemicProcess* zp_createEpidemicProcess() const = 0;
     virtual ZAbstractDashBoard* zp_createPopulationDashBoard() const = 0;
     virtual ZAbstractDashBoard* zp_createEpidemicProcessDashBoard() const = 0;
+    virtual ZAbstractPopulationWidget* zp_createPopulationWidget() const = 0;
 };
 //============================================================
 #endif // ZABSTRACTFACTORY_H

@@ -40,10 +40,15 @@ SOURCES += \
     ZAbstractEpidemicProcess.cpp \
     ZAbstractFactory.cpp \
     ZAbstractPopulation.cpp \
+    ZAbstractPopulationWidget.cpp \
     ZEpidemicDynamicWidget.cpp \
     ZHeterogeneousPopulation.cpp \
     ZHeterogeneousPopulationDashBoard.cpp \
-    ZPopulationWidget.cpp \
+    ZHeterogeneousPopulationScene.cpp \
+    ZHeterogeneousPopulationView.cpp \
+    ZHeterogeneousPopulationWidget.cpp \
+    ZPositionedIndividual.cpp \
+    ZPositionedIndividualGraphicsItem.cpp \
     ZRandom2DPositionGenerator.cpp \
     ZStochasticHeterogeneousSIRFactory.cpp \
     ZStochasticHeterogeneousSIRProcess.cpp \
@@ -57,10 +62,15 @@ HEADERS += \
     ZAbstractEpidemicProcess.h \
     ZAbstractFactory.h \
     ZAbstractPopulation.h \
+    ZAbstractPopulationWidget.h \
     ZEpidemicDynamicWidget.h \
     ZHeterogeneousPopulation.h \
     ZHeterogeneousPopulationDashBoard.h \
-    ZPopulationWidget.h \
+    ZHeterogeneousPopulationScene.h \
+    ZHeterogeneousPopulationView.h \
+    ZHeterogeneousPopulationWidget.h \
+    ZPositionedIndividual.h \
+    ZPositionedIndividualGraphicsItem.h \
     ZRandom2DPositionGenerator.h \
     ZStochasticHeterogeneousSIRFactory.h \
     ZStochasticHeterogeneousSIRProcess.h \

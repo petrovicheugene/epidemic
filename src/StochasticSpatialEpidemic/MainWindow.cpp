@@ -4,10 +4,13 @@
 #include "ZAbstractEpidemicProcess.h"
 #include "ZAbstractPopulation.h"
 #include "ZEpidemicDynamicWidget.h"
-#include "ZPopulationWidget.h"
 #include "ZStochasticHeterogeneousSIRFactory.h"
 
+#include "ZPositionedIndividualGraphicsItem.h"
+
 #include <QApplication>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QSettings>
@@ -19,14 +22,13 @@ MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
     zv_population = nullptr;
     zv_epidemicProcess = nullptr;
 
-    zv_populationChart = nullptr;
+    zv_populationWidget = nullptr;
     zv_groupDynamicChart = nullptr;
 
     zv_chartSplitter = nullptr;
     zv_epidemicProcessDashBoard = nullptr;
     zv_populationDashBoard = nullptr;
     zv_epidemicDynamicWidget = nullptr;
-    zv_populationWidget = nullptr;
 
     zh_createComponents();
     zh_createConnections();
@@ -86,15 +88,31 @@ void MainWindow::zh_createComponents()
     zv_chartSplitter->setObjectName("ChartSplitter");
     mainLayout->addWidget(zv_chartSplitter, 99999);
 
+    zv_populationWidget = factory->zp_createPopulationWidget();
+    zv_chartSplitter->addWidget(zv_populationWidget);
+
     zv_epidemicDynamicWidget = new ZEpidemicDynamicWidget(this);
     zv_chartSplitter->addWidget(zv_epidemicDynamicWidget);
 
-    zv_populationWidget = new ZPopulationWidget(this);
-    zv_chartSplitter->addWidget(zv_populationWidget);
+
+    // GRAPHICS
+    //    QGraphicsScene* graphicsScene = new QGraphicsScene(this);
+    //    QGraphicsView* view = new QGraphicsView(graphicsScene, this);
+    //    view->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+
+    //    zv_chartSplitter->addWidget(view);
+    //    for (int i = 0; i < 10; ++i)
+    //    {
+    //        ZPositionedIndividualGraphicsItem* obj = new ZPositionedIndividualGraphicsItem;
+    //        obj->setPos(i, i);
+    //        graphicsScene->addItem(obj);
+    //    }
 
     // components
     zv_population = factory->zp_createPopulation();
+    zv_population->setParent(this);
     zv_epidemicProcess = factory->zp_createEpidemicProcess();
+    zv_epidemicProcess->setParent(this);
 
     delete factory;
 }
@@ -106,6 +124,11 @@ void MainWindow::zh_createConnections()
         zv_epidemicProcess->zp_setPopulation(zv_population);
         zv_epidemicProcessDashBoard->zp_connect(zv_epidemicProcess);
         zv_populationDashBoard->zp_connect(zv_population);
+    }
+
+    if (zv_populationWidget && zv_population)
+    {
+        zv_populationWidget->zp_setPopulation(zv_population);
     }
 }
 //============================================================

@@ -4,6 +4,8 @@
 //============================================================
 #include <ZAbstractDashBoard.h>
 //============================================================
+class QPushButton;
+//============================================================
 class ZHeterogeneousPopulationDashBoard : public ZAbstractDashBoard
 {
     Q_OBJECT
@@ -13,9 +15,15 @@ public:
 
 signals:
 
+    void zg_invokeGeneration() const;
+
+private slots:
+
+    void zp_initGeneration() const;
+
 private:
     // VARS
-
+    QPushButton* zv_generateButton;
     // FUNCS
     void zh_createComponents();
     void zh_createConnections();

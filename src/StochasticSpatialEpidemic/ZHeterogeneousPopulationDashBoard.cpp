@@ -1,7 +1,7 @@
 //============================================================
 #include "ZHeterogeneousPopulationDashBoard.h"
 #include "ZHeterogeneousPopulation.h"
-#include <QLabel>
+#include <QPushButton>
 #include <QVBoxLayout>
 //============================================================
 ZHeterogeneousPopulationDashBoard::ZHeterogeneousPopulationDashBoard(QWidget* parent)
@@ -19,6 +19,11 @@ bool ZHeterogeneousPopulationDashBoard::zp_connect(QObject* component)
         return false;
     }
 
+    connect(this,
+            &ZHeterogeneousPopulationDashBoard::zg_invokeGeneration,
+            population,
+            &ZHeterogeneousPopulation::zp_generate);
+
     return true;
 }
 //============================================================
@@ -27,9 +32,20 @@ void ZHeterogeneousPopulationDashBoard::zh_createComponents()
     QVBoxLayout* mainLayout = new QVBoxLayout;
     setLayout(mainLayout);
 
-    QLabel* label = new QLabel("POP");
-    mainLayout->addWidget(label);
+    zv_generateButton = new QPushButton("Generate");
+    mainLayout->addWidget(zv_generateButton);
 }
 //============================================================
-void ZHeterogeneousPopulationDashBoard::zh_createConnections() {}
+void ZHeterogeneousPopulationDashBoard::zh_createConnections()
+{
+    connect(zv_generateButton,
+            &QPushButton::clicked,
+            this,
+            &ZHeterogeneousPopulationDashBoard::zp_initGeneration);
+}
+//============================================================
+void ZHeterogeneousPopulationDashBoard::zp_initGeneration() const
+{
+    emit zg_invokeGeneration();
+}
 //============================================================

@@ -8,8 +8,8 @@ class ZAbstractEpidemicProcess;
 class ZAbstractDashBoard;
 class ZAbstractFactory;
 class ZAbstractPopulation;
+class ZAbstractPopulationWidget;
 class ZEpidemicDynamicWidget;
-class ZPopulationWidget;
 
 class QChart;
 class QSplitter;
@@ -28,14 +28,13 @@ private:
     ZAbstractPopulation* zv_population;
     ZAbstractEpidemicProcess* zv_epidemicProcess;
 
-    QChart* zv_populationChart;
+    ZAbstractPopulationWidget* zv_populationWidget;
     QChart* zv_groupDynamicChart;
 
     QSplitter* zv_chartSplitter;
     ZAbstractDashBoard* zv_epidemicProcessDashBoard;
     ZAbstractDashBoard* zv_populationDashBoard;
     ZEpidemicDynamicWidget* zv_epidemicDynamicWidget;
-    ZPopulationWidget* zv_populationWidget;
 
     //FUNCS
 

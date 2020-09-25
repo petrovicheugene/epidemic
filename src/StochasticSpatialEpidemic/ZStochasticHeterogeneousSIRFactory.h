@@ -16,6 +16,7 @@ public:
     virtual ZAbstractEpidemicProcess* zp_createEpidemicProcess() const override;
     virtual ZAbstractDashBoard* zp_createPopulationDashBoard() const override;
     virtual ZAbstractDashBoard* zp_createEpidemicProcessDashBoard() const override;
+    virtual ZAbstractPopulationWidget* zp_createPopulationWidget() const override;
 };
 //============================================================
 #endif // ZSTOCHASTICHETEROGENEOUSSIRFACTORY_H

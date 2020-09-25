@@ -1,29 +1,20 @@
 //============================================================
-#ifndef ZPOPULATIONWIDGET_H
-#define ZPOPULATIONWIDGET_H
+#ifndef ZABSTRACTPOPULATIONWIDGET_H
+#define ZABSTRACTPOPULATIONWIDGET_H
 //============================================================
 #include <QWidget>
-#include <QtCharts>
 //============================================================
-using namespace QtCharts;
+class ZAbstractPopulation;
 //============================================================
-class ZPopulationWidget : public QWidget
+class ZAbstractPopulationWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ZPopulationWidget(QWidget *parent = nullptr);
+    explicit ZAbstractPopulationWidget(QWidget *parent = nullptr);
+    virtual bool zp_setPopulation(ZAbstractPopulation* population) = 0;
 
 signals:
 
-private:
-
-    // VARS
-    QChartView* zv_chartView;
-
-    // FUNCS
-    void zh_createComponents();
-    void zh_createConnections();
-
 };
 //============================================================
-#endif // ZPOPULATIONWIDGET_H
+#endif // ZABSTRACTPOPULATIONWIDGET_H
