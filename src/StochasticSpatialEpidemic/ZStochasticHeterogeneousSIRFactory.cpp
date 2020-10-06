@@ -2,6 +2,8 @@
 #include "ZStochasticHeterogeneousSIRFactory.h"
 #include "ZHeterogeneousPopulation.h"
 #include "ZHeterogeneousPopulationDashBoard.h"
+#include "ZHeterogeneousPopulationScene.h"
+#include "ZHeterogeneousPopulationWidget.h"
 #include "ZStochasticHeterogeneousSIRProcess.h"
 #include "ZStochasticHeterogeneousSIRProcessDashBoard.h"
 //============================================================
@@ -28,5 +30,10 @@ ZAbstractDashBoard* ZStochasticHeterogeneousSIRFactory::zp_createPopulationDashB
 ZAbstractDashBoard* ZStochasticHeterogeneousSIRFactory::zp_createEpidemicProcessDashBoard() const
 {
     return new ZStochasticHeterogeneousSIRProcessDashBoard;
+}
+//============================================================
+ZAbstractPopulationWidget* ZStochasticHeterogeneousSIRFactory::zp_createPopulationWidget() const
+{
+    return new ZHeterogeneousPopulationWidget;
 }
 //============================================================

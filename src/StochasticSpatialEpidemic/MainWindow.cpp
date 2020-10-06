@@ -4,29 +4,37 @@
 #include "ZAbstractEpidemicProcess.h"
 #include "ZAbstractPopulation.h"
 #include "ZEpidemicDynamicWidget.h"
-#include "ZPopulationWidget.h"
 #include "ZStochasticHeterogeneousSIRFactory.h"
 
+#include "ZPositionedIndividualGraphicsItem.h"
+
 #include <QApplication>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QSettings>
 #include <QSplitter>
+#include <QThread>
 #include <QVBoxLayout>
 //============================================================
 MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
 {
+    qRegisterMetaType<HealthStatus>("HealthStatus");
+    qRegisterMetaType<int>("int");
+    qRegisterMetaType<QPointF>("QPointF");
+
+    processThread = nullptr;
     zv_population = nullptr;
     zv_epidemicProcess = nullptr;
 
-    zv_populationChart = nullptr;
+    zv_populationWidget = nullptr;
     zv_groupDynamicChart = nullptr;
 
     zv_chartSplitter = nullptr;
     zv_epidemicProcessDashBoard = nullptr;
     zv_populationDashBoard = nullptr;
     zv_epidemicDynamicWidget = nullptr;
-    zv_populationWidget = nullptr;
 
     zh_createComponents();
     zh_createConnections();
@@ -37,6 +45,12 @@ MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
 MainWindow::~MainWindow()
 {
     zh_saveSettings();
+
+    if (processThread)
+    {
+        processThread->terminate();
+        processThread->wait(3000);
+    }
 }
 //============================================================
 void MainWindow::zh_createComponents()
@@ -52,51 +66,52 @@ void MainWindow::zh_createComponents()
 
     // Widgets
     // central widget
-    QWidget* widget = new QWidget;
-    QHBoxLayout* mainLayout = new QHBoxLayout;
-    widget->setLayout(mainLayout);
-    setCentralWidget(widget);
+    zv_mainSplitter = new QSplitter(Qt::Horizontal);
+    zv_mainSplitter->setObjectName("MainSplitter");
+
+    setCentralWidget(zv_mainSplitter);
 
     // dashBoard
     QWidget* dashBoard = new QWidget(this);
     QVBoxLayout* dashBoardLayout = new QVBoxLayout;
     dashBoard->setLayout(dashBoardLayout);
-    mainLayout->addWidget(dashBoard);
+    zv_mainSplitter->addWidget(dashBoard);
 
     // population dashboard
-    QGroupBox* groupBox = new QGroupBox;
-    QVBoxLayout* groupBoxLayout = new QVBoxLayout;
-    groupBox->setLayout(groupBoxLayout);
-    dashBoardLayout->addWidget(groupBox);
-
     zv_populationDashBoard = factory->zp_createPopulationDashBoard();
-    groupBoxLayout->addWidget(zv_populationDashBoard);
+    dashBoardLayout->addWidget(zv_populationDashBoard);
 
     // epidemic dashboard
-    groupBox = new QGroupBox;
-    groupBoxLayout = new QVBoxLayout;
-    groupBox->setLayout(groupBoxLayout);
-    dashBoardLayout->addWidget(groupBox);
-
     zv_epidemicProcessDashBoard = factory->zp_createEpidemicProcessDashBoard();
-    groupBoxLayout->addWidget(zv_epidemicProcessDashBoard);
+    dashBoardLayout->addWidget(zv_epidemicProcessDashBoard);
 
     // charts
     zv_chartSplitter = new QSplitter(Qt::Vertical);
     zv_chartSplitter->setObjectName("ChartSplitter");
-    mainLayout->addWidget(zv_chartSplitter, 99999);
+    zv_mainSplitter->addWidget(zv_chartSplitter);
+
+    zv_populationWidget = factory->zp_createPopulationWidget();
+    zv_chartSplitter->addWidget(zv_populationWidget);
 
     zv_epidemicDynamicWidget = new ZEpidemicDynamicWidget(this);
     zv_chartSplitter->addWidget(zv_epidemicDynamicWidget);
 
-    zv_populationWidget = new ZPopulationWidget(this);
-    zv_chartSplitter->addWidget(zv_populationWidget);
-
     // components
     zv_population = factory->zp_createPopulation();
+    // zv_population->setParent(this);
     zv_epidemicProcess = factory->zp_createEpidemicProcess();
+    // zv_epidemicProcess->setParent(this);
+    processThread = new QThread(this);
+    zv_epidemicProcess->moveToThread(processThread);
+    zv_population->moveToThread(processThread);
+    processThread->start();
 
     delete factory;
+    zv_populationSizeStatusBarLabel = new QLabel(this);
+    zv_populationHealthStatusBarLabel = new QLabel(this);
+
+    statusBar()->addWidget(zv_populationSizeStatusBarLabel);
+    statusBar()->addWidget(zv_populationHealthStatusBarLabel);
 }
 //============================================================
 void MainWindow::zh_createConnections()
@@ -107,6 +122,39 @@ void MainWindow::zh_createConnections()
         zv_epidemicProcessDashBoard->zp_connect(zv_epidemicProcess);
         zv_populationDashBoard->zp_connect(zv_population);
     }
+
+    if (zv_populationWidget && zv_population)
+    {
+        zv_populationWidget->zp_setPopulation(zv_population);
+    }
+
+    if (zv_populationWidget && zv_populationDashBoard)
+    {
+        zv_populationDashBoard->zp_connect(zv_populationWidget);
+    }
+
+    connect(zv_population,
+            &ZAbstractPopulation::zg_populationStateChanged,
+            this,
+            &MainWindow::zh_onPopulationStateChange);
+
+    connect(this,
+            &MainWindow::zg_inqueryPopulationSize,
+            zv_population,
+            &ZAbstractPopulation::zp_populationSize);
+    connect(this,
+            &MainWindow::zg_inqueryPopulationHealthStatusReport,
+            zv_population,
+            &ZAbstractPopulation::zp_populationHealthStatusReport);
+
+    connect(zv_epidemicProcess,
+            &ZAbstractEpidemicProcess::zg_epidemicFinished,
+            this,
+            &MainWindow::zh_onEpidemicFinish);
+    connect(this,
+            &MainWindow::zg_inqueryEpidemicStep,
+            zv_epidemicProcess,
+            &ZAbstractEpidemicProcess::zp_processStep);
 }
 //============================================================
 ZAbstractFactory* MainWindow::zh_createFactory()
@@ -120,6 +168,7 @@ void MainWindow::zh_saveSettings() const
     QSettings settings;
     settings.beginGroup(this->metaObject()->className());
     settings.setValue(zv_chartSplitter->objectName(), zv_chartSplitter->saveState());
+    settings.setValue(zv_mainSplitter->objectName(), zv_mainSplitter->saveState());
     while (!settings.group().isEmpty())
     {
         settings.endGroup();
@@ -137,9 +186,42 @@ void MainWindow::zh_restoreSettings()
         zv_chartSplitter->restoreState(vData.toByteArray());
     }
 
+    vData = settings.value(zv_mainSplitter->objectName());
+    if (vData.isValid() && vData.canConvert<QByteArray>())
+    {
+        zv_mainSplitter->restoreState(vData.toByteArray());
+    }
+
     while (!settings.group().isEmpty())
     {
         settings.endGroup();
     }
+}
+//============================================================
+void MainWindow::zh_onPopulationStateChange()
+{
+    quint64 populationSize;
+    emit zg_inqueryPopulationSize(populationSize);
+    QMap<QString, quint64> populationHealthStatus;
+    emit zg_inqueryPopulationHealthStatusReport(populationHealthStatus);
+    int day = 0;
+    emit zg_inqueryEpidemicStep(day);
+
+    QString msg = tr("Total population size: %1.").arg(QString::number(populationSize));
+    zv_populationSizeStatusBarLabel->setText(msg);
+
+    msg.clear();
+    msg = tr("Epidemic day: %1.").arg(QString::number(day));
+    foreach (auto name, populationHealthStatus.keys())
+    {
+        msg += tr(" %1: %2.").arg(name, QString::number(populationHealthStatus.value(name)));
+    }
+
+    zv_populationHealthStatusBarLabel->setText(msg);
+}
+//============================================================
+void MainWindow::zh_onEpidemicFinish()
+{
+    statusBar()->showMessage(tr("Epidimic finished"), 3000);
 }
 //============================================================

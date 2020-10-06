@@ -5,7 +5,10 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 #PRO VARS
 TARGET = epidemic-ss
-
+#Open MP
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS +=  -fopenmp
+LIBS += -fopenmp
 #Application version
 #RC_ICONS = "ZImages/SRVLab-8.ico"
 
@@ -40,11 +43,21 @@ SOURCES += \
     ZAbstractEpidemicProcess.cpp \
     ZAbstractFactory.cpp \
     ZAbstractPopulation.cpp \
+    ZAbstractPopulationWidget.cpp \
+    ZDistanceRepository.cpp \
     ZEpidemicDynamicWidget.cpp \
+    ZGenerationSettings.cpp \
     ZHeterogeneousPopulation.cpp \
     ZHeterogeneousPopulationDashBoard.cpp \
-    ZPopulationWidget.cpp \
+    ZHeterogeneousPopulationScene.cpp \
+    ZHeterogeneousPopulationView.cpp \
+    ZHeterogeneousPopulationWidget.cpp \
+    ZInfectionProbabilityCalculator.cpp \
+    ZPositionedIndividual.cpp \
+    ZPositionedIndividualGraphicsItem.cpp \
     ZRandom2DPositionGenerator.cpp \
+    ZRecoveryProbabilityCalculator.cpp \
+    ZStochasticHeterogeneousProcessCommon.cpp \
     ZStochasticHeterogeneousSIRFactory.cpp \
     ZStochasticHeterogeneousSIRProcess.cpp \
     ZStochasticHeterogeneousSIRProcessDashBoard.cpp \
@@ -57,11 +70,21 @@ HEADERS += \
     ZAbstractEpidemicProcess.h \
     ZAbstractFactory.h \
     ZAbstractPopulation.h \
+    ZAbstractPopulationWidget.h \
+    ZDistanceRepository.h \
     ZEpidemicDynamicWidget.h \
+    ZGenerationSettings.h \
     ZHeterogeneousPopulation.h \
     ZHeterogeneousPopulationDashBoard.h \
-    ZPopulationWidget.h \
+    ZHeterogeneousPopulationScene.h \
+    ZHeterogeneousPopulationView.h \
+    ZHeterogeneousPopulationWidget.h \
+    ZInfectionProbabilityCalculator.h \
+    ZPositionedIndividual.h \
+    ZPositionedIndividualGraphicsItem.h \
     ZRandom2DPositionGenerator.h \
+    ZRecoveryProbabilityCalculator.h \
+    ZStochasticHeterogeneousProcessCommon.h \
     ZStochasticHeterogeneousSIRFactory.h \
     ZStochasticHeterogeneousSIRProcess.h \
     ZStochasticHeterogeneousSIRProcessDashBoard.h
