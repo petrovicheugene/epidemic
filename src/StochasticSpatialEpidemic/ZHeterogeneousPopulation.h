@@ -2,10 +2,14 @@
 #ifndef ZHETEROGENEOUSPOPULATION_H
 #define ZHETEROGENEOUSPOPULATION_H
 //============================================================
-#include <ZAbstractPopulation.h>
+#include "ZAbstractPopulation.h"
+#include "ZGenerationSettings.h"
+#include "ZStochasticHeterogeneousProcessCommon.h"
+
 #include <QMap>
 #include <QPointF>
 //============================================================
+class ZDistanceRepository;
 class ZPositionedIndividual;
 //============================================================
 class ZHeterogeneousPopulation : public ZAbstractPopulation
@@ -16,17 +20,31 @@ public:
 
 public slots:
 
-    void zp_generate();
-    void zp_individualPosition(quint64 id, QPointF& position) const;
-    void zp_individualHealthState(quint64 id, int& healthState) const;
+    void zp_generate(QVariant vSettings) override;
+    void zp_clear() override;
 
-    void zp_setIndividualHealth(quint64 id, int healthState);
+    void zp_setHealthStatus(HealthStatus heathStatus);
+
+    void zp_individualPosition(quint64 id, QPointF& position, bool* ok = nullptr) const;
+    void zp_healthStateForId(quint64 id, HealthStatus& healthState, bool* ok = nullptr) const;
+    void zp_setHealthStateForId(quint64 id, int healthState, bool* ok = nullptr);
+    void zp_recoveryProbabilityForId(quint64 id, qreal& probability, bool* ok = nullptr);
+    void zp_setRecoveryProbabilityForId(quint64 id, qreal probability, bool* ok = nullptr);
+    void zp_idListForHealthState(HealthStatus healthState, QList<quint64>& idList) const;
+
+    void zp_idForIndex(int index, quint64& id, bool* ok = nullptr) const;
+    void zp_distansesForId(quint64 id, QMap<quint64, qreal>& distanceMap, bool* ok = nullptr) const;
+    void zp_populationSize(quint64& size) const override;
+    void zp_populationHealthStatus(QMap<int, quint64>& populationHealthStatus) const override;
+    void zp_populationHealthStatusReport(
+        QMap<QString, quint64>& populationHealthStatus) const override;
+
+    quint64 zp_numberForHealthStatus(int healthStatus) const override;
 
 signals:
 
     void zg_individualAdded(quint64 id) const;
     void zg_individualRemoved(quint64 id) const;
-
     void zg_individualPositionChanged(quint64 id, QPointF position) const;
     void zg_individualHealthChanged(quint64 id, int healthState) const;
 
@@ -34,8 +52,11 @@ private slots:
 
 private:
     // VARS
+    ZDistanceRepository* zv_distanceRepository;
     QMap<quint64, ZPositionedIndividual*> zv_individuals;
     // FUNCS
+    void zh_createComponents();
+    void zh_createConnections();
 };
 //============================================================
 #endif // ZHETEROGENEOUSPOPULATION_H

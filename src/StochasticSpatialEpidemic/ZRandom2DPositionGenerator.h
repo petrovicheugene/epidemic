@@ -2,7 +2,9 @@
 #ifndef ZNEIGHBORGENERATOR_H
 #define ZNEIGHBORGENERATOR_H
 //============================================================
+#include "ZGenerationSettings.h"
 #include <QObject>
+
 //============================================================
 class ZRandom2DPositionGenerator : public QObject
 {
@@ -10,7 +12,7 @@ class ZRandom2DPositionGenerator : public QObject
 public:
     explicit ZRandom2DPositionGenerator(QObject* parent = nullptr);
 
-    QList<QPointF> zp_generate(const QPointF& center, double sigma, int count) const;
+    QList<QPointF> zp_generate(ZGenerationSettings settings) const;
 
 signals:
 };

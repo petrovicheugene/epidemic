@@ -5,24 +5,21 @@
 //============================================================
 // STATIC
 //============================================================
-QMap<ZPositionedIndividualGraphicsItem::HealthState, QColor>
-    ZPositionedIndividualGraphicsItem::zv_colorMap
+QMap<HealthStatus, QColor> ZPositionedIndividualGraphicsItem::zv_colorMap
     = ZPositionedIndividualGraphicsItem::initColorMap();
-qreal ZPositionedIndividualGraphicsItem::zv_size = 5;
+qreal ZPositionedIndividualGraphicsItem::zv_size = 3;
 //============================================================
-QMap<ZPositionedIndividualGraphicsItem::HealthState, QColor>
-ZPositionedIndividualGraphicsItem::initColorMap()
+QMap<HealthStatus, QColor> ZPositionedIndividualGraphicsItem::initColorMap()
 {
-    QMap<ZPositionedIndividualGraphicsItem::HealthState, QColor> colorMap;
-    colorMap.insert(ZPositionedIndividualGraphicsItem::HS_NOT_DEFINED, Qt::transparent);
-    colorMap.insert(ZPositionedIndividualGraphicsItem::HS_SUSCEPTIBLE, Qt::cyan);
-    colorMap.insert(ZPositionedIndividualGraphicsItem::HS_INFECTIOUS, Qt::red);
-    colorMap.insert(ZPositionedIndividualGraphicsItem::HS_RECOVERED, Qt::green);
+    QMap<HealthStatus, QColor> colorMap;
+    colorMap.insert(HS_NOT_DEFINED, Qt::transparent);
+    colorMap.insert(HS_SUSCEPTIBLE, Qt::blue);
+    colorMap.insert(HS_INFECTIOUS, Qt::red);
+    colorMap.insert(HS_RECOVERED, Qt::green);
     return colorMap;
 }
 //============================================================
-void ZPositionedIndividualGraphicsItem::zp_setColor(
-    ZPositionedIndividualGraphicsItem::HealthState state, QColor color)
+void ZPositionedIndividualGraphicsItem::zp_setColor(HealthStatus state, QColor color)
 {
     zv_colorMap[state] = color;
 }
@@ -39,7 +36,6 @@ ZPositionedIndividualGraphicsItem::ZPositionedIndividualGraphicsItem(quint64 id,
     : QGraphicsObject(parent)
 {
     zv_id = id;
-
     zv_brushColor = zv_colorMap.value(HS_NOT_DEFINED);
     setFlags(ItemIgnoresTransformations);
 }
@@ -56,7 +52,7 @@ quint64 ZPositionedIndividualGraphicsItem::zp_id()
 //============================================================
 void ZPositionedIndividualGraphicsItem::zp_setItemHealthState(int healthState)
 {
-    zv_brushColor = zv_colorMap.value(static_cast<HealthState>(healthState));
+    zv_brushColor = zv_colorMap.value(static_cast<HealthStatus>(healthState));
     update();
 }
 //============================================================
