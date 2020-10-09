@@ -26,14 +26,17 @@ public slots:
     void zp_setHealthStatus(HealthStatus heathStatus);
 
     void zp_individualPosition(quint64 id, QPointF& position, bool* ok = nullptr) const;
+    void zp_individualPositionMap(QMap<quint64, QPointF>& positionMap) const;
     void zp_healthStateForId(quint64 id, HealthStatus& healthState, bool* ok = nullptr) const;
-    void zp_setHealthStateForId(quint64 id, int healthState, bool* ok = nullptr);
+    void zp_setHealthStateForId(quint64 id, HealthStatus healthState, bool* ok = nullptr);
     void zp_recoveryProbabilityForId(quint64 id, qreal& probability, bool* ok = nullptr);
     void zp_setRecoveryProbabilityForId(quint64 id, qreal probability, bool* ok = nullptr);
     void zp_idListForHealthState(HealthStatus healthState, QList<quint64>& idList) const;
 
     void zp_idForIndex(int index, quint64& id, bool* ok = nullptr) const;
-    void zp_distansesForId(quint64 id, QMap<quint64, qreal>& distanceMap, bool* ok = nullptr) const;
+    void zp_sortedDistansesForId(quint64 id,
+                                 QMultiMap<qreal, quint64>& distanceMap,
+                                 bool* ok = nullptr) const;
     void zp_populationSize(quint64& size) const override;
     void zp_populationHealthStatus(QMap<int, quint64>& populationHealthStatus) const override;
     void zp_populationHealthStatusReport(
@@ -44,11 +47,15 @@ public slots:
 signals:
 
     void zg_individualAdded(quint64 id) const;
+    void zg_individualListAdded(QList<std ::tuple<quint64, QPointF, HealthStatus>>) const;
     void zg_individualRemoved(quint64 id) const;
+    void zg_allIindividualsRemoved() const;
     void zg_individualPositionChanged(quint64 id, QPointF position) const;
     void zg_individualHealthChanged(quint64 id, int healthState) const;
 
 private slots:
+
+    void zh_onPopulationStateChange() const;
 
 private:
     // VARS

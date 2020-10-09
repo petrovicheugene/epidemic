@@ -42,7 +42,7 @@ private slots:
 
 private:
     // VARS
-    const int zv_maxGenerationSize = 10000;
+    const int zv_maxGenerationSize = 50000;
     const int zv_maxStretch = 0xFFFFFF;
     QStackedWidget* zv_stackedWidget;
     QSlider* zv_generationSizeSlider;

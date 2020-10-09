@@ -1,5 +1,6 @@
 //============================================================
 #include "ZRecoveryProbabilityCalculator.h"
+#include <QDebug>
 //============================================================
 ZRecoveryProbabilityCalculator::ZRecoveryProbabilityCalculator(QObject *parent) : QObject(parent)
 {
@@ -7,32 +8,41 @@ ZRecoveryProbabilityCalculator::ZRecoveryProbabilityCalculator(QObject *parent) 
     zv_recoveryDurationFactor = 0.3;
 }
 //============================================================
-qreal ZRecoveryProbabilityCalculator::zp_calcProbability(qreal probability) const
+qreal ZRecoveryProbabilityCalculator::zp_calcProbability(qreal probability)
 {
+    qreal newProbability;
     if (probability == 0)
     {
-        probability = zv_startingProbability;
+        newProbability = zv_startingProbability;
     }
     else
     {
+        if (zv_cacheMap.contains(probability))
+        {
+            return zv_cacheMap.value(probability);
+        }
+
         // logistic function
-        probability = zv_recoveryDurationFactor * probability * (1 - probability) + probability;
+        newProbability = zv_recoveryDurationFactor * probability * (1 - probability) + probability;
     }
 
     if (probability > 1.0)
     {
-        probability = 1.0;
+        newProbability = 1.0;
     }
     else if (probability < 0.0)
     {
-        probability = 0.0;
+        newProbability = 0.0;
     }
 
-    return probability;
+    zv_cacheMap.insert(probability, newProbability);
+    return newProbability;
 }
 //============================================================
 void ZRecoveryProbabilityCalculator::zp_setStartingProbability(qreal probability)
 {
+    zv_cacheMap.clear();
+
     if (probability < 0.0)
     {
         zv_startingProbability = 0.0;
@@ -40,6 +50,10 @@ void ZRecoveryProbabilityCalculator::zp_setStartingProbability(qreal probability
     else if (probability > 1.0)
     {
         zv_startingProbability = 1.0;
+    }
+    else
+    {
+        zv_startingProbability = probability;
     }
 }
 //============================================================
@@ -50,6 +64,7 @@ void ZRecoveryProbabilityCalculator::zp_startingProbability(qreal& probability) 
 //============================================================
 void ZRecoveryProbabilityCalculator::zp_setRecoveryDurationFactor(qreal factor)
 {
+    zv_cacheMap.clear();
     zv_recoveryDurationFactor = factor;
 }
 //============================================================

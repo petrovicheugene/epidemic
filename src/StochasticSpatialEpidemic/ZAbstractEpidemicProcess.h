@@ -26,6 +26,7 @@ signals:
 
     void zg_processChanged(int status, QVariant data = QVariant()) const;
     void zg_epidemicFinished() const;
+    void zg_epidemicStep(QVariant) const;
 
 private:
     // VARS

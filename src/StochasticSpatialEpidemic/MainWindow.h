@@ -3,6 +3,7 @@
 #define MAINWINDOW_H
 //============================================================
 #include <ZBaseMainWindow.h>
+#include <QMap>
 //============================================================
 class ZAbstractEpidemicProcess;
 class ZAbstractDashBoard;
@@ -46,6 +47,7 @@ private:
     ZAbstractDashBoard* zv_populationDashBoard;
     ZEpidemicDynamicWidget* zv_epidemicDynamicWidget;
     QLabel* zv_populationSizeStatusBarLabel;
+    QLabel* zv_epidemicDayLabel;
     QLabel* zv_populationHealthStatusBarLabel;
 
     //FUNCS
@@ -56,7 +58,10 @@ private:
     void zh_saveSettings() const override;
     void zh_restoreSettings() override;
 
-    void zh_onPopulationStateChange();
+    void zh_updateStatusBarPopulationState(
+        QMap<QString, quint64> populationHealthStatus = QMap<QString, quint64>());
+    void zh_updatePopulationOperation(int operation, QString msg = QString());
+    void zh_updateStatusBarEpidemicStep(QVariant data);
     void zh_onEpidemicFinish();
 };
 //============================================================

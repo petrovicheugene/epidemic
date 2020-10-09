@@ -40,6 +40,7 @@ MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
     zh_createConnections();
 
     zh_restoreSettings();
+    zh_updateStatusBarPopulationState();
 }
 //============================================================
 MainWindow::~MainWindow()
@@ -79,10 +80,12 @@ void MainWindow::zh_createComponents()
 
     // population dashboard
     zv_populationDashBoard = factory->zp_createPopulationDashBoard();
+    zv_populationDashBoard->setObjectName("PopulationDashBoard");
     dashBoardLayout->addWidget(zv_populationDashBoard);
 
     // epidemic dashboard
     zv_epidemicProcessDashBoard = factory->zp_createEpidemicProcessDashBoard();
+    zv_epidemicProcessDashBoard->setObjectName("EpidemicProcessDashBoard");
     dashBoardLayout->addWidget(zv_epidemicProcessDashBoard);
 
     // charts
@@ -91,9 +94,11 @@ void MainWindow::zh_createComponents()
     zv_mainSplitter->addWidget(zv_chartSplitter);
 
     zv_populationWidget = factory->zp_createPopulationWidget();
+    zv_populationWidget->setObjectName("populationWidget");
     zv_chartSplitter->addWidget(zv_populationWidget);
 
     zv_epidemicDynamicWidget = new ZEpidemicDynamicWidget(this);
+    zv_epidemicDynamicWidget->setObjectName("EpidemicDynamicWidget");
     zv_chartSplitter->addWidget(zv_epidemicDynamicWidget);
 
     // components
@@ -109,8 +114,9 @@ void MainWindow::zh_createComponents()
     delete factory;
     zv_populationSizeStatusBarLabel = new QLabel(this);
     zv_populationHealthStatusBarLabel = new QLabel(this);
-
+    zv_epidemicDayLabel = new QLabel(this);
     statusBar()->addWidget(zv_populationSizeStatusBarLabel);
+    statusBar()->addWidget(zv_epidemicDayLabel);
     statusBar()->addWidget(zv_populationHealthStatusBarLabel);
 }
 //============================================================
@@ -136,25 +142,40 @@ void MainWindow::zh_createConnections()
     connect(zv_population,
             &ZAbstractPopulation::zg_populationStateChanged,
             this,
-            &MainWindow::zh_onPopulationStateChange);
+            &MainWindow::zh_updateStatusBarPopulationState);
+    connect(zv_population,
+            &ZAbstractPopulation::zg_populationOperation,
+            this,
+            &MainWindow::zh_updatePopulationOperation);
 
-    connect(this,
-            &MainWindow::zg_inqueryPopulationSize,
-            zv_population,
-            &ZAbstractPopulation::zp_populationSize);
-    connect(this,
-            &MainWindow::zg_inqueryPopulationHealthStatusReport,
-            zv_population,
-            &ZAbstractPopulation::zp_populationHealthStatusReport);
+    //    connect(zv_population,
+    //            &ZAbstractPopulation::zg_populationStateChangeNotification,
+    //            this,
+    //            &MainWindow::zh_onPopulationStateChange);
+
+    //    connect(this,
+    //            &MainWindow::zg_inqueryPopulationSize,
+    //            zv_population,
+    //            &ZAbstractPopulation::zp_populationSize);
+
+    //    connect(this,
+    //            &MainWindow::zg_inqueryPopulationHealthStatusReport,
+    //            zv_population,
+    //            &ZAbstractPopulation::zp_populationHealthStatusReport);
 
     connect(zv_epidemicProcess,
             &ZAbstractEpidemicProcess::zg_epidemicFinished,
             this,
             &MainWindow::zh_onEpidemicFinish);
-    connect(this,
-            &MainWindow::zg_inqueryEpidemicStep,
-            zv_epidemicProcess,
-            &ZAbstractEpidemicProcess::zp_processStep);
+    connect(zv_epidemicProcess,
+            &ZAbstractEpidemicProcess::zg_epidemicStep,
+            this,
+            &MainWindow::zh_updateStatusBarEpidemicStep);
+
+    //    connect(this,
+    //            &MainWindow::zg_inqueryEpidemicStep,
+    //            zv_epidemicProcess,
+    //            &ZAbstractEpidemicProcess::zp_processStep);
 }
 //============================================================
 ZAbstractFactory* MainWindow::zh_createFactory()
@@ -198,26 +219,55 @@ void MainWindow::zh_restoreSettings()
     }
 }
 //============================================================
-void MainWindow::zh_onPopulationStateChange()
+void MainWindow::zh_updateStatusBarPopulationState(QMap<QString, quint64> populationHealthStatus)
 {
-    quint64 populationSize;
-    emit zg_inqueryPopulationSize(populationSize);
-    QMap<QString, quint64> populationHealthStatus;
-    emit zg_inqueryPopulationHealthStatusReport(populationHealthStatus);
-    int day = 0;
-    emit zg_inqueryEpidemicStep(day);
-
-    QString msg = tr("Total population size: %1.").arg(QString::number(populationSize));
-    zv_populationSizeStatusBarLabel->setText(msg);
-
-    msg.clear();
-    msg = tr("Epidemic day: %1.").arg(QString::number(day));
+    QString msg;
+    quint64 populationSize = 0;
     foreach (auto name, populationHealthStatus.keys())
     {
-        msg += tr(" %1: %2.").arg(name, QString::number(populationHealthStatus.value(name)));
+        msg += tr(" %1: %2. ").arg(name, QString::number(populationHealthStatus.value(name)));
+        populationSize += populationHealthStatus.value(name);
     }
 
     zv_populationHealthStatusBarLabel->setText(msg);
+
+    msg.clear();
+    msg = tr("Total population size: %1. ").arg(QString::number(populationSize));
+    zv_populationSizeStatusBarLabel->setText(msg);
+}
+//============================================================
+void MainWindow::zh_updatePopulationOperation(int nOperation, QString auxMsg)
+{
+    ZAbstractPopulation::PopulationOperation operation
+        = static_cast<ZAbstractPopulation::PopulationOperation>(nOperation);
+    if (operation == ZAbstractPopulation::PO_GENERATING)
+    {
+        statusBar()->showMessage(tr("Generating of population. %1").arg(auxMsg));
+    }
+
+    else if (operation == ZAbstractPopulation::PO_REMOVING)
+    {
+        statusBar()->showMessage(tr("Removing of population. %1").arg(auxMsg));
+    }
+    else if (operation == ZAbstractPopulation::PO_READY)
+    {
+        statusBar()->clearMessage();
+        statusBar()->showMessage(tr("Ready. %1").arg(auxMsg), 3000);
+    }
+    else
+    {
+        statusBar()->clearMessage();
+    }
+}
+//============================================================
+void MainWindow::zh_updateStatusBarEpidemicStep(QVariant data)
+{
+    if (!data.isValid() || !data.canConvert<int>())
+    {
+        return;
+    }
+    QString msg = tr("Epidemic day: %1. ").arg(QString::number(data.toInt()));
+    zv_epidemicDayLabel->setText(msg);
 }
 //============================================================
 void MainWindow::zh_onEpidemicFinish()

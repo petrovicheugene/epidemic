@@ -4,9 +4,11 @@
 #include "ZInfectionProbabilityCalculator.h"
 #include "ZRecoveryProbabilityCalculator.h"
 
+#include <omp.h>
 #include <QDebug>
 #include <QRandomGenerator>
 #include <QTimer>
+#include <QTimerEvent>
 //============================================================
 ZStochasticHeterogeneousSIRProcess::ZStochasticHeterogeneousSIRProcess(QObject* parent)
     : ZAbstractEpidemicProcess(parent)
@@ -33,6 +35,11 @@ void ZStochasticHeterogeneousSIRProcess::zh_createConnections()
             &ZStochasticHeterogeneousSIRProcess::zh_makeEpidemicStep);
 }
 //============================================================
+void ZStochasticHeterogeneousSIRProcess::timerEvent(QTimerEvent* event)
+{
+    zh_makeEpidemicStep();
+}
+//============================================================
 void ZStochasticHeterogeneousSIRProcess::zp_setPopulation(ZAbstractPopulation* abstractPopulation)
 {
     ZHeterogeneousPopulation* population = qobject_cast<ZHeterogeneousPopulation*>(
@@ -44,7 +51,7 @@ void ZStochasticHeterogeneousSIRProcess::zp_setPopulation(ZAbstractPopulation* a
     }
 
     connect(population,
-            &ZHeterogeneousPopulation::zg_populationStateChanged,
+            &ZHeterogeneousPopulation::zg_populationStateChangeNotification,
             this,
             &ZStochasticHeterogeneousSIRProcess::zp_onPopulationChange);
 
@@ -59,7 +66,7 @@ void ZStochasticHeterogeneousSIRProcess::zp_setPopulation(ZAbstractPopulation* a
     connect(this,
             &ZStochasticHeterogeneousSIRProcess::zg_inquireDistancesForId,
             population,
-            &ZHeterogeneousPopulation::zp_distansesForId);
+            &ZHeterogeneousPopulation::zp_sortedDistansesForId);
     connect(this,
             &ZStochasticHeterogeneousSIRProcess::zg_inquireHealthStatusForId,
             population,
@@ -107,7 +114,6 @@ void ZStochasticHeterogeneousSIRProcess::zp_processStep(int& step) const
 void ZStochasticHeterogeneousSIRProcess::zp_dispatchCommand(int command, QVariant data)
 {
     EpidemicCommand epidemicCommand = static_cast<EpidemicCommand>(command);
-    qDebug() << "COMMAND";
     switch (epidemicCommand)
     {
     case EC_STOP:
@@ -131,6 +137,12 @@ void ZStochasticHeterogeneousSIRProcess::zp_dispatchCommand(int command, QVarian
     case EC_RESET_HEALTH_STATUS:
         zh_resetPopulationHealthStatus();
         break;
+    case EC_SET_RECOVERY_DURATION_FACTOR:
+        zh_setRecoveryDurationFactor(data);
+        break;
+    case EC_SET_STARTING_RECOVERY_PROBABILITY:
+        zh_setRecoveryStartingProbability(data);
+        break;
     }
 }
 //============================================================
@@ -146,6 +158,7 @@ void ZStochasticHeterogeneousSIRProcess::zh_runEpidemic()
         {
             zh_saveInitPopulationState();
         }
+        zv_epidemicDay = 0;
     }
     else if (zv_processStatus == PS_SUSPENDED)
     {
@@ -159,6 +172,7 @@ void ZStochasticHeterogeneousSIRProcess::zh_makeEpidemicStep()
 {
     // cure the infectious
     ++zv_epidemicDay;
+    emit zg_epidemicStep(zv_epidemicDay);
     QList<quint64> infectiousList;
     emit zg_inquireIdListForHealthState(HS_INFECTIOUS, infectiousList);
     zh_cureInfectious(infectiousList);
@@ -201,52 +215,212 @@ void ZStochasticHeterogeneousSIRProcess::zh_cureInfectious(QList<quint64>& infec
     }
 }
 //============================================================
-void ZStochasticHeterogeneousSIRProcess::zh_infectSusceptible(QList<quint64>& infectiousList,
-                                                              QList<quint64>& susceptibleList) const
+void ZStochasticHeterogeneousSIRProcess::zh_cureInfectious1(QList<quint64>& infectiousList) const
+{
+    qreal probability = 0.0;
+    bool ok = false;
+    quint64 id;
+
+    QMap<quint64, qreal> probabilityMap;
+    for (int i = infectiousList.count() - 1; i >= 0; --i)
+    {
+        id = infectiousList.at(i);
+        emit zg_inquireRecoveryProbabilityForId(id, probability, &ok);
+        if (!ok)
+        {
+            continue;
+        }
+        probabilityMap.insert(id, probability);
+    }
+
+    int i;
+    qreal newProbability;
+#pragma omp parallel shared(probabilityMap) private(i, id, newProbability)
+    {
+#pragma omp for
+        for (i = 0; i < probabilityMap.count(); ++i)
+        {
+            id = probabilityMap.keys().at(i);
+            newProbability = zv_recoveryProbabilityCalculator->zp_calcProbability(
+                probabilityMap.value(id));
+
+            // throw a dice
+            if (QRandomGenerator::global()->generateDouble() < newProbability)
+            {
+                emit zg_invokeSetHealthStatusForId(id, HS_RECOVERED);
+#pragma omp critical
+                {
+                    infectiousList.removeAt(infectiousList.indexOf(id));
+                }
+            }
+            else
+            {
+                emit zg_invokeSetRecoveryProbabilityForId(id, probability);
+            }
+        }
+    }
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcess::zh_infectSusceptible1(QList<quint64>& infectiousList,
+                                                               QList<quint64>& susceptibleList) const
 {
     // TODO Check the func (product equals 1 every time )
     quint64 id;
     bool ok;
 
-    qreal probability = 0.0;
-    QList<quint64> newInfectedList;
-    for (int i = susceptibleList.count() - 1; i >= 0; --i)
-    {
-        id = susceptibleList.at(i);
-        QMap<quint64, qreal> distances;
-        emit zg_inquireDistancesForId(id, distances, &ok);
+    //    qreal probability = 0.0;
+    //    QList<quint64> newInfectedList;
+    //    QList<qreal> infectiousdistances;
 
-        if (!ok)
+    //    for (int i = susceptibleList.count() - 1; i >= 0; --i)
+    //    {
+    //        id = susceptibleList.at(i);
+    //        infectiousdistances.clear();
+    //        QMap<quint64, qreal> distances;
+    //        emit zg_inquireDistancesForId(id, distances, &ok);
+
+    //        if (!ok)
+    //        {
+    //            continue;
+    //        }
+
+    //        QMap<quint64, qreal>::iterator it;
+    //        for (it = distances.begin(); it != distances.end(); ++it)
+    //        {
+    //            if (!infectiousList.contains(it.key()))
+    //            {
+    //                continue;
+    //            }
+
+    //            infectiousdistances.append(it.value());
+    //        }
+
+    //        probability = zv_infectionProbabilityCalculator->zp_calcProbability(infectiousdistances);
+
+    //        // throw a dice
+    //        if (QRandomGenerator::global()->generateDouble() < probability)
+    //        {
+    //            emit zg_invokeSetHealthStatusForId(id, HS_INFECTIOUS);
+    //            susceptibleList.removeAt(i);
+    //            newInfectedList.append(id);
+    //        }
+    //    }
+
+    //    infectiousList.append(newInfectedList);
+}
+//============================================================
+bool ZStochasticHeterogeneousSIRProcess::zh_infectOneSusceptible(
+    quint64 id, QList<quint64>& infectiousList) const
+{
+    QMultiMap<qreal, quint64> distances;
+    emit zg_inquireDistancesForId(id, distances);
+
+    QList<qreal> infectiousdistances;
+
+    QMultiMap<qreal, quint64>::iterator it;
+    for (it = distances.begin(); it != distances.end(); ++it)
+    {
+        if (it.key() > zv_infectionProbabilityCalculator->zp_safetyDistance())
+        {
+            break;
+        }
+
+        if (!infectiousList.contains(it.value()))
         {
             continue;
         }
 
-        QMap<quint64, qreal>::iterator it;
-        QList<qreal> infectiousdistances;
+        infectiousdistances.append(it.key());
+    }
+
+    qreal probability = zv_infectionProbabilityCalculator->zp_calcProbability(infectiousdistances);
+    // throw a dice
+    if (QRandomGenerator::global()->generateDouble() < probability)
+    {
+        return true;
+    }
+
+    return false;
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcess::zh_infectSusceptible(QList<quint64>& infectiousList,
+                                                              QList<quint64>& susceptibleList) const
+{
+    //QList<quint64> newInfectedList;
+    int iCount = infectiousList.count();
+    QMultiMap<qreal, quint64> distances;
+    QMultiMap<qreal, quint64>::iterator it;
+
+    for (int i = 0; i < iCount; ++i)
+    {
+        emit zg_inquireDistancesForId(infectiousList.at(i), distances);
+
         for (it = distances.begin(); it != distances.end(); ++it)
         {
-            if (!infectiousList.contains(it.key()))
+            if (it.key() > zv_infectionProbabilityCalculator->zp_safetyDistance())
+            {
+                break;
+            }
+
+            if (!susceptibleList.contains(it.value()))
             {
                 continue;
             }
 
-            infectiousdistances.append(it.value());
-        }
-
-        probability = zv_infectionProbabilityCalculator->zp_calcProbability(infectiousdistances);
-
-        //                          product *= 1.0 - (zv_infectionFactor * exp(-(it.value() / zv_L)));
-        // throw a dice
-        // 1-product - probability of infection
-        if (QRandomGenerator::global()->generateDouble() < probability)
-        {
-            emit zg_invokeSetHealthStatusForId(id, HS_INFECTIOUS);
-            susceptibleList.removeAt(i);
-            newInfectedList.append(id);
+            if (zh_infectOneSusceptible(it.value(), infectiousList))
+            {
+                susceptibleList.removeAt(susceptibleList.indexOf(it.value()));
+                // newInfectedList.append(it.value());
+                emit zg_invokeSetHealthStatusForId(it.value(), HS_INFECTIOUS);
+            }
         }
     }
 
-    infectiousList.append(newInfectedList);
+    //  infectiousList.append(newInfectedList);
+    //        // TODO Check the func (product equals 1 every time )
+    //        quint64 id;
+    //        bool ok;
+
+    //        qreal probability = 0.0;
+    //        QList<quint64> newInfectedList;
+    //        QList<qreal> infectiousdistances;
+
+    //        for (int i = susceptibleList.count() - 1; i >= 0; --i)
+    //        {
+    //            id = susceptibleList.at(i);
+    //            QMap<quint64, qreal> distances;
+    //            emit zg_inquireDistancesForId(id, distances, &ok);
+
+    //            if (!ok)
+    //            {
+    //                continue;
+    //            }
+
+    //            QMap<quint64, qreal>::iterator it;
+    //            for (it = distances.begin(); it != distances.end(); ++it)
+    //            {
+    //                if (!infectiousList.contains(it.key()))
+    //                {
+    //                    continue;
+    //                }
+
+    //                infectiousdistances.append(it.value());
+    //            }
+
+    //            probability = zv_infectionProbabilityCalculator->zp_calcProbability(infectiousdistances);
+
+    //            //                          product *= 1.0 - (zv_infectionFactor * exp(-(it.value() / zv_L)));
+    //            // throw a dice
+    //            // 1-product - probability of infection
+    //            if (QRandomGenerator::global()->generateDouble() < probability)
+    //            {
+    //                emit zg_invokeSetHealthStatusForId(id, HS_INFECTIOUS);
+    //                susceptibleList.removeAt(i);
+    //                newInfectedList.append(id);
+    //            }
+    //        }
+
+    //        infectiousList.append(newInfectedList);
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcess::zh_pauseEpidemic()
@@ -263,9 +437,9 @@ void ZStochasticHeterogeneousSIRProcess::zh_finishEpidemic()
     if (zv_processStatus != PS_STOPPED)
     {
         zv_timer->stop();
-        zv_epidemicDay = 0;
         zh_setProcessStatus(PS_STOPPED);
         emit zg_epidemicFinished();
+        emit zg_epidemicStep(zv_epidemicDay);
     }
 }
 //============================================================
@@ -321,6 +495,37 @@ void ZStochasticHeterogeneousSIRProcess::zh_setLParameter(QVariant data)
     if (ok)
     {
         zv_infectionProbabilityCalculator->zp_setLParameter(L);
+    }
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcess::zh_setRecoveryDurationFactor(QVariant data)
+
+{
+    if (!data.isValid() || !data.canConvert<qreal>())
+    {
+        return;
+    }
+
+    bool ok = false;
+    int beta = data.toDouble(&ok);
+    if (ok)
+    {
+        zv_recoveryProbabilityCalculator->zp_setRecoveryDurationFactor(beta);
+    }
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcess::zh_setRecoveryStartingProbability(QVariant data)
+{
+    if (!data.isValid() || !data.canConvert<qreal>())
+    {
+        return;
+    }
+
+    bool ok = false;
+    int p = data.toDouble(&ok);
+    if (ok)
+    {
+        zv_recoveryProbabilityCalculator->zp_setStartingProbability(p);
     }
 }
 //============================================================

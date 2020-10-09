@@ -23,7 +23,9 @@ signals:
                                        HealthStatus& healthState,
                                        bool* ok = nullptr) const;
     void zg_individualItemMousePressed(quint64 id, bool* ok = nullptr) const;
-    void zg_individualItemHealthStateChanged(quint64 id, int& healthState, bool* ok = nullptr) const;
+    void zg_individualItemHealthStateChanged(quint64 id,
+                                             HealthStatus healthState,
+                                             bool* ok = nullptr) const;
     void zg_inquireRecoveryProbability(quint64 id, qreal& healthState, bool* ok = nullptr) const;
     void zg_invokeSetRecoveryProbability(quint64 id, qreal healthState, bool* ok = nullptr) const;
     void zg_positionMarked(QPointF) const;
@@ -31,7 +33,10 @@ signals:
 public slots:
 
     void zp_addIndividualItem(quint64 id);
+    void zp_addIndividualItemForSpec(std::tuple<quint64, QPointF, HealthStatus>);
+    void zp_addIndividualItemForSpecList(QList<std::tuple<quint64, QPointF, HealthStatus>> itemList);
     void zp_removeIndividualItem(quint64 id) const;
+    void zp_removeAllItems() const;
     void zp_setIndividualItemPosition(quint64 id, QPointF position) const;
     void zp_setIndividualItemHealth(quint64 id, int healthState) const;
     void zp_setPlotRect(QRectF rect) const;

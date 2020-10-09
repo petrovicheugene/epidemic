@@ -5,7 +5,9 @@
 #include "ZHeterogeneousPopulationView.h"
 #include "ZPositionedIndividualGraphicsItem.h"
 
+#include <tuple>
 #include <QDebug>
+#include <QElapsedTimer>
 #include <QMouseEvent>
 #include <QVBoxLayout>
 //============================================================
@@ -52,13 +54,17 @@ bool ZHeterogeneousPopulationWidget::zp_setPopulation(ZAbstractPopulation* abstr
     }
 
     connect(population,
-            &ZHeterogeneousPopulation::zg_individualAdded,
+            &ZHeterogeneousPopulation::zg_individualListAdded,
             this,
-            &ZHeterogeneousPopulationWidget::zp_addIndividualItem);
+            &ZHeterogeneousPopulationWidget::zp_addIndividualItemForSpecList);
     connect(population,
             &ZHeterogeneousPopulation::zg_individualRemoved,
             this,
             &ZHeterogeneousPopulationWidget::zp_removeIndividualItem);
+    connect(population,
+            &ZHeterogeneousPopulation::zg_allIindividualsRemoved,
+            this,
+            &ZHeterogeneousPopulationWidget::zp_removeAllItems);
     connect(population,
             &ZHeterogeneousPopulation::zg_individualPositionChanged,
             this,
@@ -81,20 +87,25 @@ bool ZHeterogeneousPopulationWidget::zp_setPopulation(ZAbstractPopulation* abstr
             population,
             &ZHeterogeneousPopulation::zp_setHealthStateForId);
 
-    connect(this,
-            &ZHeterogeneousPopulationWidget::zg_inquireRecoveryProbability,
-            population,
-            &ZHeterogeneousPopulation::zp_recoveryProbabilityForId);
-    connect(this,
-            &ZHeterogeneousPopulationWidget::zg_invokeSetRecoveryProbability,
-            population,
-            &ZHeterogeneousPopulation::zp_setRecoveryProbabilityForId);
+    //    connect(this,
+    //            &ZHeterogeneousPopulationWidget::zg_inquireRecoveryProbability,
+    //            population,
+    //            &ZHeterogeneousPopulation::zp_recoveryProbabilityForId);
+    //    connect(this,
+    //            &ZHeterogeneousPopulationWidget::zg_invokeSetRecoveryProbability,
+    //            population,
+    //            &ZHeterogeneousPopulation::zp_setRecoveryProbabilityForId);
 
     return true;
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_addIndividualItem(quint64 id)
 {
+    if (zh_itemForIndex(id))
+    {
+        return;
+    }
+
     QPointF position;
     HealthStatus healthState;
 
@@ -112,12 +123,48 @@ void ZHeterogeneousPopulationWidget::zp_addIndividualItem(quint64 id)
     zv_scene->addItem(item);
 }
 //============================================================
+void ZHeterogeneousPopulationWidget::zp_addIndividualItemForSpec(
+    std::tuple<quint64, QPointF, HealthStatus> tuple)
+{
+    quint64 id = std::get<0>(tuple);
+
+    if (zh_itemForIndex(id))
+    {
+        return;
+    }
+
+    QPointF position = std::get<1>(tuple);
+    HealthStatus healthStatus = std::get<2>(tuple);
+    ZPositionedIndividualGraphicsItem* item = new ZPositionedIndividualGraphicsItem(id);
+    connect(item,
+            &ZPositionedIndividualGraphicsItem::zg_pressed,
+            this,
+            &ZHeterogeneousPopulationWidget::zh_onIndividualItemMousePress);
+    item->setPos(position);
+    item->zp_setItemHealthState(healthStatus);
+    zv_scene->addItem(item);
+
+    QRectF rect = zv_scene->itemsBoundingRect();
+    if (!zv_scene->sceneRect().contains(rect))
+    {
+        zv_scene->setSceneRect(rect);
+    }
+}
+//============================================================
+void ZHeterogeneousPopulationWidget::zp_addIndividualItemForSpecList(
+    QList<std::tuple<quint64, QPointF, HealthStatus>> itemList)
+{
+    for (int i = 0; i < itemList.count(); ++i)
+    {
+        std::tuple<quint64, QPointF, HealthStatus> tuple = itemList.at(i);
+        zp_addIndividualItemForSpec(tuple);
+    }
+}
+//============================================================
 void ZHeterogeneousPopulationWidget::zh_onIndividualItemMousePress(quint64 id) const
 {
     emit zg_individualItemMousePressed(id);
-    int infectiousState = HS_INFECTIOUS;
-
-    emit zg_individualItemHealthStateChanged(id, infectiousState);
+    emit zg_individualItemHealthStateChanged(id, HS_INFECTIOUS);
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_removeIndividualItem(quint64 id) const
@@ -129,6 +176,18 @@ void ZHeterogeneousPopulationWidget::zp_removeIndividualItem(quint64 id) const
     }
 
     zv_scene->removeItem(item);
+    delete item;
+}
+//============================================================
+void ZHeterogeneousPopulationWidget::zp_removeAllItems() const
+{
+    foreach (auto item, zv_scene->items())
+    {
+        zv_scene->removeItem(item);
+        delete item;
+    }
+
+    zv_scene->setSceneRect(QRectF(QPointF(0, 0), QSizeF(0.1, 0.1)));
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_setIndividualItemPosition(quint64 id, QPointF position) const
@@ -140,7 +199,6 @@ void ZHeterogeneousPopulationWidget::zp_setIndividualItemPosition(quint64 id, QP
     }
 
     item->setPos(position);
-    // zv_scene->update();
     QRectF rect = zv_scene->itemsBoundingRect();
     if (!rect.contains(item->pos()))
     {

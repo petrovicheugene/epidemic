@@ -35,7 +35,7 @@ ZHeterogeneousPopulationDashBoard::~ZHeterogeneousPopulationDashBoard()
 void ZHeterogeneousPopulationDashBoard::zh_saveSettings() const
 {
     QSettings settings;
-    settings.beginGroup(this->objectName());
+    settings.beginGroup(this->metaObject()->className());
 
     settings.setValue(zv_generationSizeSpinBox->objectName(), zv_generationSizeSpinBox->value());
     settings.setValue(zv_markSizeSlider->objectName(), zv_markSizeSlider->value());
@@ -57,7 +57,7 @@ void ZHeterogeneousPopulationDashBoard::zh_saveSettings() const
 void ZHeterogeneousPopulationDashBoard::zh_restoreSettings()
 {
     QSettings settings;
-    settings.beginGroup(this->objectName());
+    settings.beginGroup(this->metaObject()->className());
 
     zv_generationSizeSpinBox->setValue(
         settings.value(zv_generationSizeSpinBox->objectName()).toInt());
@@ -202,7 +202,7 @@ void ZHeterogeneousPopulationDashBoard::zh_createComponents()
     // basement
     mainLayout->addStretch(zv_maxStretch);
     QDialogButtonBox* dialogButtonBox = new QDialogButtonBox;
-    dialogButtonBox->setOrientation(Qt::Vertical);
+    //dialogButtonBox->setOrientation(Qt::Vertical);
     mainLayout->addWidget(dialogButtonBox);
 
     zv_fitInViewButton = new QPushButton("Fit in view");

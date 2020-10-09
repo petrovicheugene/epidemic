@@ -23,6 +23,7 @@ public:
     quint64 zp_id() const;
     qreal zp_recoveryProbability() const;
     void zp_setRecoveryProbability(qreal probability);
+    void zp_notifyPosition() const;
 
 signals:
 

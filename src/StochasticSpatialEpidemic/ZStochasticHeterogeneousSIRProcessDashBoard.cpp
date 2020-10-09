@@ -1,5 +1,7 @@
 //============================================================
 #include "ZStochasticHeterogeneousSIRProcessDashBoard.h"
+
+#include "ZRecoveryProbabilityCalculator.h"
 #include "ZStochasticHeterogeneousSIRProcess.h"
 
 #include <QDebug>
@@ -11,9 +13,11 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSettings>
 #include <QSlider>
 #include <QSpinBox>
 #include <QVBoxLayout>
+#include <QtMath>
 //============================================================
 ZStochasticHeterogeneousSIRProcessDashBoard::ZStochasticHeterogeneousSIRProcessDashBoard(
     QWidget* parent)
@@ -21,6 +25,57 @@ ZStochasticHeterogeneousSIRProcessDashBoard::ZStochasticHeterogeneousSIRProcessD
 {
     zh_createComponents();
     zh_createConnections();
+    zh_restoreSettings();
+    zh_applySettingsToProcess();
+}
+//============================================================
+ZStochasticHeterogeneousSIRProcessDashBoard::~ZStochasticHeterogeneousSIRProcessDashBoard()
+{
+    zh_saveSettings();
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_saveSettings() const
+{
+    QSettings settings;
+    settings.beginGroup(this->metaObject()->className());
+
+    settings.setValue(zv_infectionFactorSlider->objectName(), zv_infectionFactorSlider->value());
+    settings.setValue(zv_recoveryDurationSlider->objectName(), zv_recoveryDurationSlider->value());
+    settings.setValue(zv_recoveryStartingDaySlider->objectName(),
+                      zv_recoveryStartingDaySlider->value());
+    settings.setValue(zv_epidemicRateSlider->objectName(), zv_epidemicRateSlider->value());
+
+    while (!settings.group().isEmpty())
+    {
+        settings.endGroup();
+    }
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_restoreSettings()
+{
+    QSettings settings;
+    settings.beginGroup(this->metaObject()->className());
+
+    zv_infectionFactorSlider->setValue(
+        settings.value(zv_infectionFactorSlider->objectName()).toInt());
+    zv_recoveryDurationSlider->setValue(
+        settings.value(zv_recoveryDurationSlider->objectName()).toInt());
+    zv_recoveryStartingDaySlider->setValue(
+        settings.value(zv_recoveryStartingDaySlider->objectName()).toInt());
+    zv_epidemicRateSlider->setValue(settings.value(zv_epidemicRateSlider->objectName()).toInt());
+
+    while (!settings.group().isEmpty())
+    {
+        settings.endGroup();
+    }
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_applySettingsToProcess()
+{
+    zh_onRecoveryDurationSliderChange(zv_recoveryDurationSlider->value());
+    zh_onRecoveryStartingDaySliderChange(zv_recoveryStartingDaySlider->value());
+    zh_onSpeedSliderChange(zv_epidemicRateSlider->value());
+    zh_onInfectionFactorSliderChange(zv_infectionFactorSlider->value());
 }
 //============================================================
 bool ZStochasticHeterogeneousSIRProcessDashBoard::zp_connect(QObject* component)
@@ -53,52 +108,78 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
     bkgLayout->setMargin(0);
     setLayout(bkgLayout);
 
-    QGroupBox* populationGroupBox = new QGroupBox(tr("Epidemic"));
-    populationGroupBox->setObjectName("EpidemicGroupBox");
-    populationGroupBox->setStyleSheet(
+    QGroupBox* epidemicGroupBox = new QGroupBox(tr("Epidemic"));
+    epidemicGroupBox->setObjectName("EpidemicGroupBox");
+    epidemicGroupBox->setStyleSheet(
         "QGroupBox#EpidemicGroupBox::title {subcontrol-origin: margin; "
         "subcontrol-position: top center; "
         "padding: 5px 8000px 5px 8000px; background-color: #FF17365D; color: rgb(255, 255, 255);}");
-    bkgLayout->addWidget(populationGroupBox);
+    bkgLayout->addWidget(epidemicGroupBox);
 
     QVBoxLayout* mainLayout = new QVBoxLayout;
-    populationGroupBox->setLayout(mainLayout);
+    epidemicGroupBox->setLayout(mainLayout);
     mainLayout->addSpacing(20);
 
-    // recovery
-    QGroupBox* groupBox = new QGroupBox(tr("Recovery"));
+    QFontMetrics fm(QLineEdit().font());
+
+    // infection
+    QGroupBox* groupBox = new QGroupBox(tr("Infection"));
     mainLayout->addWidget(groupBox);
     QVBoxLayout* groupBoxLayout = new QVBoxLayout;
     groupBox->setLayout(groupBoxLayout);
 
-    //    // recovery rate
-
     QLabel* label = new QLabel(this);
-    label->setText(tr("Recovery duration:"));
+    label->setText(tr("Infection characteristic distance:"));
     groupBoxLayout->addWidget(label);
 
     QHBoxLayout* hLayout = new QHBoxLayout;
     groupBoxLayout->addLayout(hLayout);
+    zv_infectionFactorSlider = new QSlider(Qt::Horizontal, this);
+    zv_infectionFactorSlider->setObjectName("InfectionFactorSlider");
+    zv_infectionFactorSlider->setRange(3, 100);
+    hLayout->addWidget(zv_infectionFactorSlider);
+    zv_infectionFactorLineEdit = new QLineEdit(this);
+    zv_infectionFactorLineEdit->setObjectName("InfectionFactorLineEdit");
+    zv_infectionFactorLineEdit->setReadOnly(true);
+    zv_infectionFactorLineEdit->setValidator(new QDoubleValidator);
+    zv_infectionFactorLineEdit->setFixedWidth(fm.horizontalAdvance("00000"));
+    hLayout->addWidget(zv_infectionFactorLineEdit);
 
-    QFontMetrics fm(QLineEdit().font());
+    // recovery
+    groupBox = new QGroupBox(tr("Recovery"));
+    mainLayout->addWidget(groupBox);
+    groupBoxLayout = new QVBoxLayout;
+    groupBox->setLayout(groupBoxLayout);
+
+    // recovery rate
+
+    label = new QLabel(this);
+    label->setText(tr("Recovery duration in days:"));
+    groupBoxLayout->addWidget(label);
+
+    hLayout = new QHBoxLayout;
+    groupBoxLayout->addLayout(hLayout);
 
     zv_recoveryDurationSlider = new QSlider(Qt::Horizontal, this);
-    zv_recoveryDurationSlider->setRange(1, 20);
+    zv_recoveryDurationSlider->setObjectName("RecoveryDurationSlider");
+    zv_recoveryDurationSlider->setRange(0, 50);
     hLayout->addWidget(zv_recoveryDurationSlider);
     zv_recoveryDurationLineEdit = new QLineEdit(this);
+    zv_recoveryDurationLineEdit->setObjectName("RrecoveryDurationLineEdit");
     zv_recoveryDurationLineEdit->setReadOnly(true);
     zv_recoveryDurationLineEdit->setValidator(new QDoubleValidator);
     zv_recoveryDurationLineEdit->setFixedWidth(fm.horizontalAdvance("00000"));
     hLayout->addWidget(zv_recoveryDurationLineEdit);
     // recovery start
     label = new QLabel(this);
-    label->setText(tr("Recovery start:"));
+    label->setText(tr("Recovery starting day:"));
     groupBoxLayout->addWidget(label);
 
     hLayout = new QHBoxLayout;
     groupBoxLayout->addLayout(hLayout);
     zv_recoveryStartingDaySlider = new QSlider(Qt::Horizontal, this);
-    zv_recoveryDurationSlider->setRange(1, 20);
+    zv_recoveryStartingDaySlider->setObjectName("RecoveryStartingDaySlider");
+    zv_recoveryStartingDaySlider->setRange(1, 20);
     hLayout->addWidget(zv_recoveryStartingDaySlider);
     zv_recoveryStartingDayLineEdit = new QLineEdit(this);
     zv_recoveryStartingDayLineEdit->setReadOnly(false);
@@ -106,12 +187,14 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
     zv_recoveryStartingDayLineEdit->setFixedWidth(fm.horizontalAdvance("00000"));
     hLayout->addWidget(zv_recoveryStartingDayLineEdit);
 
+    // epidemic rate
     groupBox = new QGroupBox(tr("Epidemic rate"));
     mainLayout->addWidget(groupBox);
     groupBoxLayout = new QVBoxLayout;
     groupBox->setLayout(groupBoxLayout);
 
     zv_epidemicRateSlider = new QSlider(Qt::Horizontal, this);
+    zv_epidemicRateSlider->setObjectName("EpidemicRateSlider");
     zv_epidemicRateSlider->setRange(0, 9);
     zv_epidemicRateSlider->setTickInterval(100);
     groupBoxLayout->addWidget(zv_epidemicRateSlider);
@@ -119,7 +202,7 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
     // basement
     mainLayout->addStretch(zv_maxStretch);
     QDialogButtonBox* dialogButtonBox = new QDialogButtonBox;
-    dialogButtonBox->setOrientation(Qt::Vertical);
+    // dialogButtonBox->setOrientation(Qt::Vertical);
     mainLayout->addWidget(dialogButtonBox);
 
     zv_startPauseButton = new QPushButton("Start");
@@ -135,6 +218,10 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createConnections()
 {
+    connect(zv_infectionFactorSlider,
+            &QSlider::valueChanged,
+            this,
+            &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionFactorSliderChange);
     connect(zv_recoveryDurationSlider,
             &QSlider::valueChanged,
             this,
@@ -164,12 +251,71 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createConnections()
             &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onClearButtonClick);
 }
 //============================================================
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionFactorSliderChange(int value)
+{
+    qreal L = static_cast<qreal>(value) / 10.0;
+    zv_infectionFactorLineEdit->setText(QString::number(L));
+    emit zg_epidemicCommand(EC_SET_L_PARAMETER, QVariant(L));
+}
+//============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onRecoveryDurationSliderChange(int value)
 {
+    qreal recoveryDurationFactor = qExp(-static_cast<qreal>(value) / 16.0) * 1.65;
+    // cacl duration for display in LineEdit
+    ZRecoveryProbabilityCalculator calculator;
+    calculator.zp_setRecoveryDurationFactor(recoveryDurationFactor);
+    calculator.zp_setStartingProbability(0.01);
+    int canary = 0;
+    int duration = 0;
+    for (qreal probability = 0.0; probability < 0.95;)
+    {
+        if (probability > 0.05)
+        {
+            duration++;
+        }
+        probability = calculator.zp_calcProbability(probability);
+        if (canary++ > 100)
+        {
+            break;
+        }
+    }
+
+    zv_recoveryDurationLineEdit->setText(QString::number(duration));
+
+    // set recoveryDurationFactor  to the calculator
+    emit zg_epidemicCommand(EC_SET_RECOVERY_DURATION_FACTOR, QVariant(recoveryDurationFactor));
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onRecoveryStartingDaySliderChange(int value)
 {
+    // set value to display
+    zv_recoveryStartingDayLineEdit->setText(QString::number(value));
+    // calc starting probability which gives the required starting day
+    ZRecoveryProbabilityCalculator calculator;
+    qreal probability;
+    qreal startingProbability;
+    for (startingProbability = 0.5; startingProbability /= 2.0;)
+    {
+        if (startingProbability < 0.000001)
+        {
+            break;
+        }
+        probability = startingProbability;
+        calculator.zp_setStartingProbability(startingProbability);
+        calculator.zp_setRecoveryDurationFactor(0.2);
+        for (int i = 0; i < value; i++)
+        {
+            probability = calculator.zp_calcProbability(probability);
+        }
+
+        if (probability < 0.05)
+        {
+            break;
+        }
+    }
+
+    // set starting prrobability to the calculator
+    emit zg_epidemicCommand(EC_SET_STARTING_RECOVERY_PROBABILITY, QVariant(startingProbability));
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onSpeedSliderChange(int value)

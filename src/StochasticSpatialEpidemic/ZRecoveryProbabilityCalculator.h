@@ -2,6 +2,7 @@
 #ifndef ZRECOVERYPROBABILITYCALCULATOR_H
 #define ZRECOVERYPROBABILITYCALCULATOR_H
 //============================================================
+#include <QMap>
 #include <QObject>
 //============================================================
 class ZRecoveryProbabilityCalculator : public QObject
@@ -10,7 +11,7 @@ class ZRecoveryProbabilityCalculator : public QObject
 public:
     explicit ZRecoveryProbabilityCalculator(QObject* parent = nullptr);
 
-    qreal zp_calcProbability(qreal probability) const;
+    qreal zp_calcProbability(qreal probability);
 
 public slots:
 
@@ -23,6 +24,7 @@ signals:
 
 private:
     // VARS
+    QMap<qreal, qreal> zv_cacheMap;
     qreal zv_startingProbability;
     qreal zv_recoveryDurationFactor;
 };

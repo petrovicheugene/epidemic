@@ -34,7 +34,7 @@ signals:
                                        HealthStatus healthState,
                                        bool* ok = nullptr) const;
     void zg_inquireDistancesForId(quint64 id,
-                                  QMap<quint64, qreal>& distanceMap,
+                                  QMultiMap<qreal, quint64>& distanceMap,
                                   bool* ok = nullptr) const;
     void zg_inquireIdForIndex(int index, quint64& id, bool* ok = nullptr) const;
     void zg_inquirePopulationSize(quint64& count) const;
@@ -49,9 +49,11 @@ signals:
     // void zg_groupSizeChanged(const QString& groupName, int size) const;
     void zg_processChanged(int status, QVariant data = QVariant()) const;
 
+protected:
+    void timerEvent(QTimerEvent* event) override;
+
 private:
     // VARS
-
     ZInfectionProbabilityCalculator* zv_infectionProbabilityCalculator;
     ZRecoveryProbabilityCalculator* zv_recoveryProbabilityCalculator;
     int zv_epidemicDay;
@@ -67,8 +69,14 @@ private:
     void zh_saveInitPopulationState();
     void zh_runEpidemic();
     void zh_makeEpidemicStep();
+
     void zh_cureInfectious(QList<quint64>& infectiousList) const;
+    void zh_cureInfectious1(QList<quint64>& infectiousList) const;
     void zh_infectSusceptible(QList<quint64>& infectiousList, QList<quint64>& susceptibleList) const;
+    bool zh_infectOneSusceptible(quint64 id, QList<quint64>& infectiousList) const;
+
+    void zh_infectSusceptible1(QList<quint64>& infectiousList,
+                               QList<quint64>& susceptibleList) const;
     void zh_pauseEpidemic();
 
     void zh_finishEpidemic();
@@ -78,6 +86,8 @@ private:
 
     void zh_setProcessStatus(ProcessStatus status);
     void zh_setLParameter(QVariant data);
+    void zh_setRecoveryDurationFactor(QVariant data);
+    void zh_setRecoveryStartingProbability(QVariant data);
     void zh_resetPopulationHealthStatus();
 };
 //============================================================

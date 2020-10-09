@@ -9,6 +9,14 @@ class ZAbstractPopulation : public QObject
 {
     Q_OBJECT
 public:
+    enum PopulationOperation
+    {
+        PO_READY,
+        PO_REMOVING,
+        PO_GENERATING
+    };
+    Q_ENUM(PopulationOperation)
+
     explicit ZAbstractPopulation(QObject* parent = nullptr);
 
     virtual void zp_generate(QVariant vSettings) = 0;
@@ -21,7 +29,9 @@ public:
     virtual quint64 zp_numberForHealthStatus(int healthStatus) const = 0;
 
 signals:
-    void zg_populationStateChanged() const;
+    void zg_populationStateChangeNotification() const;
+    void zg_populationStateChanged(QMap<QString, quint64> populationHealthStatus) const;
+    void zg_populationOperation(int operation, QString msg = QString()) const;
 };
 //============================================================
 #endif // ZABSTRACTPOPULATION_H

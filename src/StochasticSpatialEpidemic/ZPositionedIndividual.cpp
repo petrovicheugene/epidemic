@@ -74,3 +74,8 @@ void ZPositionedIndividual::zp_setRecoveryProbability(qreal probability)
     zv_recoveryProbability = probability;
 }
 //============================================================
+void ZPositionedIndividual::zp_notifyPosition() const
+{
+    emit zg_positionChanged(zv_id, zv_position);
+}
+//============================================================

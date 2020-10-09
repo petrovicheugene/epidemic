@@ -12,19 +12,31 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Total population size: %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source> %1: %2.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Epidemic day: %1.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Epidimic finished</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> %1: %2. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Total population size: %1. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Epidemic day: %1. </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Generating of population. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Removing of population. %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Ready. %1</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -52,6 +64,17 @@
     </message>
     <message>
         <source>Recovered</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ZHeterogeneousPopulation</name>
+    <message>
+        <source>Recalculating distances</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Elapsed %1 s.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -145,14 +168,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Recovery start:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Recovery duration:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Epidemic</source>
         <translation type="unfinished"></translation>
     </message>
@@ -166,6 +181,22 @@
     </message>
     <message>
         <source>Reset population health status</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Recovery duration in days:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Recovery starting day:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Infection characteristic distance:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
