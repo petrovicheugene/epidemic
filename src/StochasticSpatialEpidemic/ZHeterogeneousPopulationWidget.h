@@ -38,7 +38,7 @@ public slots:
     void zp_removeIndividualItem(quint64 id) const;
     void zp_removeAllItems() const;
     void zp_setIndividualItemPosition(quint64 id, QPointF position) const;
-    void zp_setIndividualItemHealth(quint64 id, int healthState) const;
+    void zp_setIndividualItemHealth(quint64 id, HealthStatus healthState) const;
     void zp_setPlotRect(QRectF rect) const;
     void zp_setMarkSize(int val) const;
     void zp_fitInView() const;

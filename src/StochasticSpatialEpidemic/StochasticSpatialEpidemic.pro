@@ -44,6 +44,7 @@ SOURCES += \
     ZAbstractFactory.cpp \
     ZAbstractPopulation.cpp \
     ZAbstractPopulationWidget.cpp \
+    ZDistance.cpp \
     ZDistanceRepository.cpp \
     ZEpidemicDynamicWidget.cpp \
     ZGenerationSettings.cpp \
@@ -71,6 +72,7 @@ HEADERS += \
     ZAbstractFactory.h \
     ZAbstractPopulation.h \
     ZAbstractPopulationWidget.h \
+    ZDistance.h \
     ZDistanceRepository.h \
     ZEpidemicDynamicWidget.h \
     ZGenerationSettings.h \

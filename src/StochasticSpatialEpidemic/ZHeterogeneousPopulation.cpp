@@ -6,6 +6,7 @@
 #include "ZRandom2DPositionGenerator.h"
 
 #include <omp.h>
+#include <QDateTime>
 #include <QDebug>
 #include <QElapsedTimer>
 //============================================================
@@ -14,6 +15,7 @@ ZHeterogeneousPopulation::ZHeterogeneousPopulation(QObject* parent) : ZAbstractP
     qRegisterMetaType<QList<std::tuple<quint64, QPointF, HealthStatus>>>(
         "QList<std::tuple<quint64, QPointF, HealthStatus>>");
     qRegisterMetaType<QMap<QString, quint64>>("QMap<QString, quint64>");
+    qRegisterMetaType<QHash<QString, quint64>>("QMap<QString, quint64>");
 
     zh_createComponents();
     zh_createConnections();
@@ -51,14 +53,14 @@ void ZHeterogeneousPopulation::zh_createConnections()
             this,
             &ZHeterogeneousPopulation::zh_onPopulationStateChange);
 
+    //    connect(zv_distanceRepository,
+    //            &ZDistanceRepository::zg_inquirePositionForId,
+    //            this,
+    //            &ZHeterogeneousPopulation::zp_individualPosition);
     connect(zv_distanceRepository,
-            &ZDistanceRepository::zg_inquirePositionForId,
+            &ZDistanceRepository::zg_inquireIndividualPositionHash,
             this,
-            &ZHeterogeneousPopulation::zp_individualPosition);
-    connect(zv_distanceRepository,
-            &ZDistanceRepository::zg_inquireIndividualPositionMap,
-            this,
-            &ZHeterogeneousPopulation::zp_individualPositionMap);
+            &ZHeterogeneousPopulation::zp_individualPositionHash);
 
     connect(this,
             &ZHeterogeneousPopulation::zg_individualRemoved,
@@ -77,7 +79,9 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
         return;
     }
 
-    emit zg_populationOperation(PO_GENERATING);
+    qint64 startTimeMark = QDateTime::currentMSecsSinceEpoch();
+
+    emit zg_populationOperation(PO_GENERATING, tr("Creating individuals"));
     ZGenerationSettings settings = vSettings.value<ZGenerationSettings>();
 
     ZRandom2DPositionGenerator generator;
@@ -85,15 +89,16 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
 
     QList<std::tuple<quint64, QPointF, HealthStatus>> individualSpecList;
     ZPositionedIndividual* individual;
-    QList<quint64> idList;
     int i;
-    QMap<quint64, QPointF> positionMap;
-#pragma omp parallel shared(positionMap, idList, individualSpecList) private(i, individual)
+    QHash<quint64, QPointF> positionHash;
+    QPointF pos;
+
+    //#pragma omp parallel shared(positionHash, individualSpecList) private(i, individual, pos)
     {
-#pragma omp for
+        //#pragma omp for
         for (i = 0; i < positionList.count(); ++i)
         {
-            QPointF pos = positionList.at(i);
+            pos = positionList.at(i);
             individual = new ZPositionedIndividual;
             individual->zp_setHealthState(HS_SUSCEPTIBLE);
             individual->zp_setPosition(pos);
@@ -101,73 +106,95 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
             std::tuple<quint64, QPointF, HealthStatus> tuple(individual->zp_id(),
                                                              pos,
                                                              HS_SUSCEPTIBLE);
-#pragma omp critical
+            //#pragma omp critical
             {
                 individualSpecList.append(tuple);
             }
-
-#pragma omp critical
+            //#pragma omp critical
             {
-                idList.append(individual->zp_id());
+                zv_individualHash.insert(individual->zp_id(), individual);
+            }
+            //#pragma omp critical
+            {
+                positionHash.insert(individual->zp_id(), pos);
             }
 
-#pragma omp critical
+            //#pragma omp master
             {
-                zv_individuals.insert(individual->zp_id(), individual);
-            }
-#pragma omp critical
-            {
-                positionMap.insert(individual->zp_id(), pos);
+                connect(individual,
+                        &ZPositionedIndividual::zg_healthStateChanged,
+                        this,
+                        &ZHeterogeneousPopulation::zp_individualHealthChanged);
+                connect(individual,
+                        &ZPositionedIndividual::zg_positionChanged,
+                        this,
+                        &ZHeterogeneousPopulation::zg_individualPositionChanged);
+                connect(individual,
+                        &ZPositionedIndividual::zg_positionChanged,
+                        zv_distanceRepository,
+                        &ZDistanceRepository::zp_recalcDistancesForPosition);
+
+                emit zg_individualAdded(individual->zp_id());
             }
         }
-
-#pragma omp barrier
     }
 
+    emit zg_populationOperation(PO_GENERATING, tr("Displaying"));
     emit zg_individualListAdded(individualSpecList);
 
-    // connect each new individual
-    for (int i = 0; i < idList.count(); ++i)
-    {
-        quint64 id = idList.at(i);
-
-        individual = zv_individuals.value(id);
-        connect(individual,
-                &ZPositionedIndividual::zg_healthStateChanged,
-                this,
-                &ZHeterogeneousPopulation::zg_individualHealthChanged);
-        connect(individual,
-                &ZPositionedIndividual::zg_positionChanged,
-                this,
-                &ZHeterogeneousPopulation::zg_individualPositionChanged);
-        connect(individual,
-                &ZPositionedIndividual::zg_positionChanged,
-                zv_distanceRepository,
-                &ZDistanceRepository::zp_onPositionChange);
-        if (i % 50 == 0)
-        {
-            emit zg_populationOperation(PO_GENERATING, QString::number(i));
-        }
-
-        emit zg_individualAdded(id);
-        //individual->zp_notifyPosition();
-    }
-
     emit zg_populationOperation(PO_GENERATING, tr("Recalculating distances"));
-    QElapsedTimer timer;
-    timer.start();
-    zv_distanceRepository->zp_recalcSortedDistanceMap();
+    zv_distanceRepository->zp_recalcDistancesForPositions(positionHash);
+
+    qint64 endTimeMark = QDateTime::currentMSecsSinceEpoch();
+    qint64 elapsedSec = (endTimeMark - startTimeMark) / 1000;
+
     emit zg_populationOperation(PO_READY,
-                                tr(" Elapsed %1 s.").arg(QString::number(timer.elapsed() / 1000)));
+                                tr(" Elapsed time: %1 m. %2 s.")
+                                    .arg(QString::number(elapsedSec / 60),
+                                         QString::number(elapsedSec % 60)));
+
+    return;
+
+    //    // connect each new individual
+    //    for (int i = 0; i < idList.count(); ++i)
+    //    {
+    //        quint64 id = idList.at(i);
+
+    //        individual = zv_individuals.value(id);
+    //        connect(individual,
+    //                &ZPositionedIndividual::zg_healthStateChanged,
+    //                this,
+    //                &ZHeterogeneousPopulation::zg_individualHealthChanged);
+    //        connect(individual,
+    //                &ZPositionedIndividual::zg_positionChanged,
+    //                this,
+    //                &ZHeterogeneousPopulation::zg_individualPositionChanged);
+    //        connect(individual,
+    //                &ZPositionedIndividual::zg_positionChanged,
+    //                zv_distanceRepository,
+    //                &ZDistanceRepository::zp_onPositionChange);
+    //        if (i % 50 == 0)
+    //        {
+    //            emit zg_populationOperation(PO_GENERATING, QString::number(i));
+    //        }
+
+    //        emit zg_individualAdded(id);
+    //        //individual->zp_notifyPosition();
+    //    }
+
+    //    emit zg_populationOperation(PO_GENERATING, tr("Recalculating distances"));
+    //    //zv_distanceRepository->zp_recalcSortedDistanceMap();
+    //    emit zg_populationOperation(PO_READY,
+    //                                tr(" Elapsed %1 s.").arg(QString::number(timer.elapsed() / 1000)));
 }
 //============================================================
 void ZHeterogeneousPopulation::zp_clear()
 {
     emit zg_populationOperation(PO_REMOVING);
 
-    QList<quint64> idList = zv_individuals.keys();
-    qDeleteAll(zv_individuals);
-    zv_individuals.clear();
+    QList<quint64> idList = zv_individualHash.keys();
+    qDeleteAll(zv_individualHash);
+    zv_individualHash.clear();
 
     emit zg_allIindividualsRemoved();
 
@@ -181,7 +208,7 @@ void ZHeterogeneousPopulation::zp_clear()
 //============================================================
 void ZHeterogeneousPopulation::zp_setHealthStatus(HealthStatus heathStatus)
 {
-    foreach (auto individual, zv_individuals)
+    foreach (auto individual, zv_individualHash)
     {
         individual->zp_setHealthState(heathStatus);
     }
@@ -189,7 +216,7 @@ void ZHeterogeneousPopulation::zp_setHealthStatus(HealthStatus heathStatus)
 //============================================================
 void ZHeterogeneousPopulation::zp_individualPosition(quint64 id, QPointF& position, bool* ok) const
 {
-    ZPositionedIndividual* individual = zv_individuals.value(id, nullptr);
+    ZPositionedIndividual* individual = zv_individualHash.value(id, nullptr);
     if (!individual)
     {
         position = QPointF();
@@ -208,12 +235,12 @@ void ZHeterogeneousPopulation::zp_individualPosition(quint64 id, QPointF& positi
     }
 }
 //============================================================
-void ZHeterogeneousPopulation::zp_individualPositionMap(QMap<quint64, QPointF>& positionMap) const
+void ZHeterogeneousPopulation::zp_individualPositionHash(QHash<quint64, QPointF>& positionHash) const
 {
-    positionMap.clear();
-    foreach (auto individual, zv_individuals)
+    positionHash.clear();
+    foreach (auto individual, zv_individualHash)
     {
-        positionMap.insert(individual->zp_id(), individual->zp_position());
+        positionHash.insert(individual->zp_id(), individual->zp_position());
     }
 }
 //============================================================
@@ -221,7 +248,7 @@ void ZHeterogeneousPopulation::zp_healthStateForId(quint64 id,
                                                    HealthStatus& healthState,
                                                    bool* ok) const
 {
-    ZPositionedIndividual* individual = zv_individuals.value(id, nullptr);
+    ZPositionedIndividual* individual = zv_individualHash.value(id, nullptr);
     if (!individual)
     {
         healthState = HS_NOT_DEFINED;
@@ -242,7 +269,7 @@ void ZHeterogeneousPopulation::zp_healthStateForId(quint64 id,
 //============================================================
 void ZHeterogeneousPopulation::zp_setHealthStateForId(quint64 id, HealthStatus healthState, bool* ok)
 {
-    ZPositionedIndividual* individual = zv_individuals.value(id, nullptr);
+    ZPositionedIndividual* individual = zv_individualHash.value(id, nullptr);
     if (!individual)
     {
         if (ok)
@@ -265,8 +292,8 @@ void ZHeterogeneousPopulation::zp_idListForHealthState(HealthStatus healthState,
                                                        QList<quint64>& idList) const
 {
     idList.clear();
-    QMap<quint64, ZPositionedIndividual*>::const_iterator it;
-    for (it = zv_individuals.begin(); it != zv_individuals.end(); ++it)
+    QHash<quint64, ZPositionedIndividual*>::const_iterator it;
+    for (it = zv_individualHash.begin(); it != zv_individualHash.end(); ++it)
     {
         if (it.value()->zp_healthState() == healthState)
         {
@@ -277,7 +304,7 @@ void ZHeterogeneousPopulation::zp_idListForHealthState(HealthStatus healthState,
 //============================================================
 void ZHeterogeneousPopulation::zp_recoveryProbabilityForId(quint64 id, qreal& probability, bool* ok)
 {
-    ZPositionedIndividual* individual = zv_individuals.value(id, nullptr);
+    ZPositionedIndividual* individual = zv_individualHash.value(id, nullptr);
     if (!individual)
     {
         if (ok)
@@ -299,7 +326,7 @@ void ZHeterogeneousPopulation::zp_setRecoveryProbabilityForId(quint64 id,
                                                               qreal probability,
                                                               bool* ok)
 {
-    ZPositionedIndividual* individual = zv_individuals.value(id, nullptr);
+    ZPositionedIndividual* individual = zv_individualHash.value(id, nullptr);
     if (!individual)
     {
         if (ok)
@@ -319,7 +346,7 @@ void ZHeterogeneousPopulation::zp_setRecoveryProbabilityForId(quint64 id,
 //============================================================
 void ZHeterogeneousPopulation::zp_idForIndex(int index, quint64& id, bool* ok) const
 {
-    if (index < 0 || index >= zv_individuals.count())
+    if (index < 0 || index >= zv_individualHash.count())
     {
         if (ok)
         {
@@ -328,7 +355,7 @@ void ZHeterogeneousPopulation::zp_idForIndex(int index, quint64& id, bool* ok) c
         return;
     }
 
-    id = zv_individuals.keys().at(index);
+    id = zv_individualHash.keys().at(index);
     if (ok)
     {
         *ok = true;
@@ -340,7 +367,7 @@ void ZHeterogeneousPopulation::zp_sortedDistansesForId(quint64 id,
                                                        QMultiMap<qreal, quint64>& distanceMap,
                                                        bool* ok) const
 {
-    if (!zv_individuals.keys().contains(id))
+    if (!zv_individualHash.keys().contains(id))
     {
         if (ok)
         {
@@ -349,7 +376,7 @@ void ZHeterogeneousPopulation::zp_sortedDistansesForId(quint64 id,
         return;
     }
 
-    zv_distanceRepository->zp_sortedDistancesForId(id, distanceMap);
+    // zv_distanceRepository->zp_sortedDistancesForId(id, distanceMap);
     if (ok)
     {
         *ok = true;
@@ -359,7 +386,7 @@ void ZHeterogeneousPopulation::zp_sortedDistansesForId(quint64 id,
 //============================================================
 void ZHeterogeneousPopulation::zp_populationSize(quint64& size) const
 {
-    size = zv_individuals.count();
+    size = zv_individualHash.count();
 }
 //============================================================
 void ZHeterogeneousPopulation::zp_populationHealthStatus(
@@ -387,8 +414,8 @@ void ZHeterogeneousPopulation::zp_populationHealthStatusReport(
 quint64 ZHeterogeneousPopulation::zp_numberForHealthStatus(int healthStatus) const
 {
     quint64 count = 0;
-    QMap<quint64, ZPositionedIndividual*>::const_iterator it;
-    for (it = zv_individuals.begin(); it != zv_individuals.end(); ++it)
+    QHash<quint64, ZPositionedIndividual*>::const_iterator it;
+    for (it = zv_individualHash.begin(); it != zv_individualHash.end(); ++it)
     {
         if (it.value()->zp_healthState() == healthStatus)
         {
@@ -404,5 +431,10 @@ void ZHeterogeneousPopulation::zh_onPopulationStateChange() const
     QMap<QString, quint64> populationHealthStatus;
     zp_populationHealthStatusReport(populationHealthStatus);
     emit zg_populationStateChanged(populationHealthStatus);
+}
+//============================================================
+void ZHeterogeneousPopulation::zp_individualHealthChanged(quint64 id, HealthStatus healthState) const
+{
+    emit zg_individualHealthChanged(id, healthState);
 }
 //============================================================
