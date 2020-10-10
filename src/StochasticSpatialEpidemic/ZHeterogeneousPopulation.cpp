@@ -6,6 +6,7 @@
 #include "ZRandom2DPositionGenerator.h"
 
 #include <omp.h>
+#include <QDateTime>
 #include <QDebug>
 #include <QElapsedTimer>
 //============================================================
@@ -77,8 +78,8 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
     {
         return;
     }
-    QElapsedTimer timer;
-    timer.start();
+
+    qint64 startTimeMark = QDateTime::currentMSecsSinceEpoch();
 
     emit zg_populationOperation(PO_GENERATING, tr("Creating individuals"));
     ZGenerationSettings settings = vSettings.value<ZGenerationSettings>();
@@ -92,9 +93,9 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
     QHash<quint64, QPointF> positionHash;
     QPointF pos;
 
-#pragma omp parallel shared(positionHash, individualSpecList) private(i, individual, pos)
+    //#pragma omp parallel shared(positionHash, individualSpecList) private(i, individual, pos)
     {
-#pragma omp for
+        //#pragma omp for
         for (i = 0; i < positionList.count(); ++i)
         {
             pos = positionList.at(i);
@@ -105,15 +106,15 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
             std::tuple<quint64, QPointF, HealthStatus> tuple(individual->zp_id(),
                                                              pos,
                                                              HS_SUSCEPTIBLE);
-#pragma omp critical
+            //#pragma omp critical
             {
                 individualSpecList.append(tuple);
             }
-#pragma omp critical
+            //#pragma omp critical
             {
                 zv_individualHash.insert(individual->zp_id(), individual);
             }
-#pragma omp critical
+            //#pragma omp critical
             {
                 positionHash.insert(individual->zp_id(), pos);
             }
@@ -144,8 +145,13 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
     emit zg_populationOperation(PO_GENERATING, tr("Recalculating distances"));
     zv_distanceRepository->zp_recalcDistancesForPositions(positionHash);
 
+    qint64 endTimeMark = QDateTime::currentMSecsSinceEpoch();
+    qint64 elapsedSec = (endTimeMark - startTimeMark) / 1000;
+
     emit zg_populationOperation(PO_READY,
-                                tr(" Elapsed %1 s.").arg(QString::number(timer.elapsed() / 1000)));
+                                tr(" Elapsed time: %1 m. %2 s.")
+                                    .arg(QString::number(elapsedSec / 60),
+                                         QString::number(elapsedSec % 60)));
 
     return;
 

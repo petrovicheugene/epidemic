@@ -252,7 +252,7 @@ void MainWindow::zh_updatePopulationOperation(int nOperation, QString auxMsg)
     else if (operation == ZAbstractPopulation::PO_READY)
     {
         statusBar()->clearMessage();
-        statusBar()->showMessage(tr("Ready. %1").arg(auxMsg), 3000);
+        statusBar()->showMessage(tr("Ready. %1").arg(auxMsg), 5000);
     }
     else
     {

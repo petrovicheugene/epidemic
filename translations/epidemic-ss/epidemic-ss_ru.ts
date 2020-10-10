@@ -70,10 +70,6 @@
 <context>
     <name>ZHeterogeneousPopulation</name>
     <message>
-        <source> Elapsed %1 s.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Creating individuals</source>
         <translation type="unfinished"></translation>
     </message>
@@ -83,6 +79,10 @@
     </message>
     <message>
         <source>Recalculating distances</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> Elapsed time: %1 m. %2 s.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

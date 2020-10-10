@@ -12,6 +12,9 @@ ZDistanceRepository::ZDistanceRepository(QObject* parent) : QObject(parent)
 //============================================================
 void ZDistanceRepository::zp_recalcDistancesForPositions(const QHash<quint64, QPointF>& positionHash)
 {
+    // convertation
+    QHash<quint64, QHash<quint64, qreal>> cache = zh_distancesSortedById();
+
     QHash<quint64, QPointF> existingPositionHash;
     emit zg_inquireIndividualPositionHash(existingPositionHash);
 
@@ -37,9 +40,8 @@ void ZDistanceRepository::zp_recalcDistancesForPositions(const QHash<quint64, QP
     qreal aXsq;
     qreal aYsq;
     qreal aDistance;
-    int i;
-    int distanceCount;
-    bool ok;
+    // int distanceCount;
+    //    bool ok;
 
     //#pragma omp parallel shared(eKeys, nKeys, positionHash, existingPositionHash, recalcedSet) private( \
 //    n, e, i, nId, nPos, eId, ePos, aXsq, aYsq, aDistance, ok, distanceCount)
@@ -68,52 +70,52 @@ void ZDistanceRepository::zp_recalcDistancesForPositions(const QHash<quint64, QP
                 aDistance = qSqrt(aXsq + aYsq);
 
                 // update distanceHash
-                ok = false;
-                distanceCount = zv_distanceHash[nId].count();
+                //                ok = false;
+                //                distanceCount = cache[nId].count();
 
                 //#pragma omp critical
                 {
-                    for (i = 0; i < distanceCount; ++i)
-                    {
-                        if (zv_distanceHash[nId].at(i).zv_id != eId)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            // found
-                            zv_distanceHash[nId][i].zv_distance = aDistance;
-                            ok = true;
-                            break;
-                        }
-                    }
+                    //                    for (i = 0; i < distanceCount; ++i)
+                    //                    {
+                    //                        if (cache[nId].key() != eId)
+                    //                        {
+                    //                            continue;
+                    //                        }
+                    //                        else
+                    //                        {
+                    // found
+                    cache[nId][eId] = aDistance;
+                    //                            ok = true;
+                    //                            break;
+                    //                        }
+                    //                    }
                     // not found. create new
-                    if (!ok)
-                    {
-                        zv_distanceHash[nId].append(ZDistance(eId, aDistance));
-                    }
+                    //                    if (!ok)
+                    //                    {
+                    //                        zv_distanceHash[nId].append(ZDistance(eId, aDistance));
+                    //                    }
 
-                    distanceCount = zv_distanceHash[eId].count();
-                    for (i = 0; i < distanceCount; ++i)
-                    {
-                        if (zv_distanceHash[eId].at(i).zv_id != nId)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            // found
-                            zv_distanceHash[eId][i].zv_distance = aDistance;
-                            ok = true;
-                            break;
-                        }
-                    }
+                    //                    distanceCount = zv_distanceHash[eId].count();
+                    //                    for (i = 0; i < distanceCount; ++i)
+                    //                    {
+                    //                        if (zv_distanceHash[eId].at(i).zv_id != nId)
+                    //                        {
+                    //                            continue;
+                    //                        }
+                    //                        else
+                    //                        {
+                    // found
+                    cache[eId][nId] = aDistance;
+                    //                            ok = true;
+                    //                            break;
+                    //                        }
+                    //                    }
 
-                    // not found. create new
-                    if (!ok)
-                    {
-                        zv_distanceHash[eId].append(ZDistance(nId, aDistance));
-                    }
+                    //                    // not found. create new
+                    //                    if (!ok)
+                    //                    {
+                    //                        zv_distanceHash[eId].append(ZDistance(nId, aDistance));
+                    //                    }
                 }
             }
 
@@ -126,17 +128,22 @@ void ZDistanceRepository::zp_recalcDistancesForPositions(const QHash<quint64, QP
         }
     }
 
-    // sorting
-    QList<quint64> keys = zv_distanceHash.keys();
+    zh_convertToDistanceHash(cache);
 
-    for (int i = 0; i < zv_distanceHash.count(); ++i)
-    {
-        std::sort(zv_distanceHash[keys.at(i)].begin(), zv_distanceHash[keys.at(i)].end());
-    }
+    // sorting
+    //QList<quint64> keys = zv_distanceHash.keys();
+
+    //    for (int i = 0; i < zv_distanceHash.count(); ++i)
+    //    {
+    //        std::sort(zv_distanceHash[keys.at(i)].begin(), zv_distanceHash[keys.at(i)].end());
+    //    }
 }
 //============================================================
 QHash<quint64, QHash<quint64, qreal>> ZDistanceRepository::zh_distancesSortedById() const
 {
+    QElapsedTimer timer;
+    timer.start();
+
     QHash<quint64, QHash<quint64, qreal>> idDistances;
     QHash<quint64, QList<ZDistance>>::const_iterator it;
     QHash<quint64, qreal> cHash;
@@ -169,7 +176,7 @@ void ZDistanceRepository::zh_convertToDistanceHash(
     for (it = distances.begin(); it != distances.end(); ++it)
     {
         distanceList.clear();
-        for (rowIt = it.value().begin(); rowIt != it.value().end(); ++it)
+        for (rowIt = it.value().begin(); rowIt != it.value().end(); ++rowIt)
         {
             distanceList.append(ZDistance(rowIt.key(), rowIt.value()));
         }
