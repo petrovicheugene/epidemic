@@ -87,14 +87,14 @@ bool ZHeterogeneousPopulationWidget::zp_setPopulation(ZAbstractPopulation* abstr
             population,
             &ZHeterogeneousPopulation::zp_setHealthStateForId);
 
-    //    connect(this,
-    //            &ZHeterogeneousPopulationWidget::zg_inquireRecoveryProbability,
-    //            population,
-    //            &ZHeterogeneousPopulation::zp_recoveryProbabilityForId);
-    //    connect(this,
-    //            &ZHeterogeneousPopulationWidget::zg_invokeSetRecoveryProbability,
-    //            population,
-    //            &ZHeterogeneousPopulation::zp_setRecoveryProbabilityForId);
+    connect(this,
+            &ZHeterogeneousPopulationWidget::zg_inquireRecoveryProbability,
+            population,
+            &ZHeterogeneousPopulation::zp_recoveryProbabilityForId);
+    connect(this,
+            &ZHeterogeneousPopulationWidget::zg_invokeSetRecoveryProbability,
+            population,
+            &ZHeterogeneousPopulation::zp_setRecoveryProbabilityForId);
 
     return true;
 }
@@ -206,7 +206,8 @@ void ZHeterogeneousPopulationWidget::zp_setIndividualItemPosition(quint64 id, QP
     }
 }
 //============================================================
-void ZHeterogeneousPopulationWidget::zp_setIndividualItemHealth(quint64 id, int healthState) const
+void ZHeterogeneousPopulationWidget::zp_setIndividualItemHealth(quint64 id,
+                                                                HealthStatus healthState) const
 {
     ZPositionedIndividualGraphicsItem* item = zh_itemForIndex(id);
     if (!item)

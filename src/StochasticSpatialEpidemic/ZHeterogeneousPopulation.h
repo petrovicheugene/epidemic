@@ -6,6 +6,7 @@
 #include "ZGenerationSettings.h"
 #include "ZStochasticHeterogeneousProcessCommon.h"
 
+#include <QHash>
 #include <QMap>
 #include <QPointF>
 //============================================================
@@ -26,7 +27,7 @@ public slots:
     void zp_setHealthStatus(HealthStatus heathStatus);
 
     void zp_individualPosition(quint64 id, QPointF& position, bool* ok = nullptr) const;
-    void zp_individualPositionMap(QMap<quint64, QPointF>& positionMap) const;
+    void zp_individualPositionHash(QHash<quint64, QPointF>& positionHash) const;
     void zp_healthStateForId(quint64 id, HealthStatus& healthState, bool* ok = nullptr) const;
     void zp_setHealthStateForId(quint64 id, HealthStatus healthState, bool* ok = nullptr);
     void zp_recoveryProbabilityForId(quint64 id, qreal& probability, bool* ok = nullptr);
@@ -51,16 +52,19 @@ signals:
     void zg_individualRemoved(quint64 id) const;
     void zg_allIindividualsRemoved() const;
     void zg_individualPositionChanged(quint64 id, QPointF position) const;
-    void zg_individualHealthChanged(quint64 id, int healthState) const;
+    void zg_individualHealthChanged(quint64 id, HealthStatus healthState) const;
 
 private slots:
 
     void zh_onPopulationStateChange() const;
+    void zp_individualHealthChanged(quint64 id, HealthStatus healthState) const;
 
 private:
     // VARS
     ZDistanceRepository* zv_distanceRepository;
-    QMap<quint64, ZPositionedIndividual*> zv_individuals;
+    //QMap<quint64, ZPositionedIndividual*> zv_individuals;
+    QHash<quint64, ZPositionedIndividual*> zv_individualHash;
+
     // FUNCS
     void zh_createComponents();
     void zh_createConnections();

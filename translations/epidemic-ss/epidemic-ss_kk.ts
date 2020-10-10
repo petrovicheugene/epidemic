@@ -70,11 +70,19 @@
 <context>
     <name>ZHeterogeneousPopulation</name>
     <message>
-        <source>Recalculating distances</source>
+        <source> Elapsed %1 s.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source> Elapsed %1 s.</source>
+        <source>Creating individuals</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Displaying</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Recalculating distances</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
