@@ -26,7 +26,7 @@ ZStochasticHeterogeneousSIRProcessDashBoard::ZStochasticHeterogeneousSIRProcessD
     zh_createComponents();
     zh_createConnections();
     zh_restoreSettings();
-    zh_applySettingsToProcess();
+    QMetaObject::invokeMethod(this, "zh_applySettingsToProcess", Qt::QueuedConnection);
 }
 //============================================================
 ZStochasticHeterogeneousSIRProcessDashBoard::~ZStochasticHeterogeneousSIRProcessDashBoard()
@@ -39,7 +39,8 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_saveSettings() const
     QSettings settings;
     settings.beginGroup(this->metaObject()->className());
 
-    settings.setValue(zv_infectionFactorSlider->objectName(), zv_infectionFactorSlider->value());
+    settings.setValue(zv_infectionCharacteristicDistanceSlider->objectName(),
+                      zv_infectionCharacteristicDistanceSlider->value());
     settings.setValue(zv_recoveryDurationSlider->objectName(), zv_recoveryDurationSlider->value());
     settings.setValue(zv_recoveryStartingDaySlider->objectName(),
                       zv_recoveryStartingDaySlider->value());
@@ -56,8 +57,8 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_restoreSettings()
     QSettings settings;
     settings.beginGroup(this->metaObject()->className());
 
-    zv_infectionFactorSlider->setValue(
-        settings.value(zv_infectionFactorSlider->objectName()).toInt());
+    zv_infectionCharacteristicDistanceSlider->setValue(
+        settings.value(zv_infectionCharacteristicDistanceSlider->objectName()).toInt());
     zv_recoveryDurationSlider->setValue(
         settings.value(zv_recoveryDurationSlider->objectName()).toInt());
     zv_recoveryStartingDaySlider->setValue(
@@ -75,7 +76,7 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_applySettingsToProcess()
     zh_onRecoveryDurationSliderChange(zv_recoveryDurationSlider->value());
     zh_onRecoveryStartingDaySliderChange(zv_recoveryStartingDaySlider->value());
     zh_onSpeedSliderChange(zv_epidemicRateSlider->value());
-    zh_onInfectionFactorSliderChange(zv_infectionFactorSlider->value());
+    zh_onInfectionCharacteristicDistanceChange(zv_infectionCharacteristicDistanceSlider->value());
 }
 //============================================================
 bool ZStochasticHeterogeneousSIRProcessDashBoard::zp_connect(QObject* component)
@@ -97,8 +98,8 @@ bool ZStochasticHeterogeneousSIRProcessDashBoard::zp_connect(QObject* component)
             this,
             &ZStochasticHeterogeneousSIRProcessDashBoard::zp_onProcessStatusChange);
 
-    zv_epidemicRateSlider->valueChanged(zv_epidemicRateSlider->value());
-
+    // zv_epidemicRateSlider->valueChanged(zv_epidemicRateSlider->value());
+    zh_applySettingsToProcess();
     return true;
 }
 //============================================================
@@ -128,18 +129,22 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
     QVBoxLayout* groupBoxLayout = new QVBoxLayout;
     groupBox->setLayout(groupBoxLayout);
 
+    QString toolTip = tr("A distance at which the probability of infection is 0.5");
     QLabel* label = new QLabel(this);
     label->setText(tr("Infection characteristic distance:"));
+    label->setToolTip(toolTip);
     groupBoxLayout->addWidget(label);
 
     QHBoxLayout* hLayout = new QHBoxLayout;
     groupBoxLayout->addLayout(hLayout);
-    zv_infectionFactorSlider = new QSlider(Qt::Horizontal, this);
-    zv_infectionFactorSlider->setObjectName("InfectionFactorSlider");
-    zv_infectionFactorSlider->setRange(3, 100);
-    hLayout->addWidget(zv_infectionFactorSlider);
+    zv_infectionCharacteristicDistanceSlider = new QSlider(Qt::Horizontal, this);
+    zv_infectionCharacteristicDistanceSlider->setObjectName("InfectionFactorSlider");
+    zv_infectionCharacteristicDistanceSlider->setToolTip(toolTip);
+    zv_infectionCharacteristicDistanceSlider->setRange(3, 100);
+    hLayout->addWidget(zv_infectionCharacteristicDistanceSlider);
     zv_infectionFactorLineEdit = new QLineEdit(this);
     zv_infectionFactorLineEdit->setObjectName("InfectionFactorLineEdit");
+    zv_infectionFactorLineEdit->setToolTip(toolTip);
     zv_infectionFactorLineEdit->setReadOnly(true);
     zv_infectionFactorLineEdit->setValidator(new QDoubleValidator);
     zv_infectionFactorLineEdit->setFixedWidth(fm.horizontalAdvance("00000"));
@@ -205,23 +210,25 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
     // dialogButtonBox->setOrientation(Qt::Vertical);
     mainLayout->addWidget(dialogButtonBox);
 
-    zv_startPauseButton = new QPushButton("Start");
-    zv_startPauseButton->setToolTip(tr("Start epidemic"));
-    dialogButtonBox->addButton(zv_startPauseButton, QDialogButtonBox::ActionRole);
-    zv_stopButton = new QPushButton("Stop");
-    zv_stopButton->setToolTip(tr("Interrupt epidemic"));
-    dialogButtonBox->addButton(zv_stopButton, QDialogButtonBox::ActionRole);
     zv_resetButton = new QPushButton("Reset");
     zv_resetButton->setToolTip(tr("Reset population health status"));
     dialogButtonBox->addButton(zv_resetButton, QDialogButtonBox::ActionRole);
+
+    zv_stopButton = new QPushButton("Stop");
+    zv_stopButton->setToolTip(tr("Interrupt epidemic"));
+    dialogButtonBox->addButton(zv_stopButton, QDialogButtonBox::ActionRole);
+
+    zv_startPauseButton = new QPushButton("Start");
+    zv_startPauseButton->setToolTip(tr("Start epidemic"));
+    dialogButtonBox->addButton(zv_startPauseButton, QDialogButtonBox::ActionRole);
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createConnections()
 {
-    connect(zv_infectionFactorSlider,
+    connect(zv_infectionCharacteristicDistanceSlider,
             &QSlider::valueChanged,
             this,
-            &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionFactorSliderChange);
+            &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionCharacteristicDistanceChange);
     connect(zv_recoveryDurationSlider,
             &QSlider::valueChanged,
             this,
@@ -251,7 +258,8 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createConnections()
             &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onClearButtonClick);
 }
 //============================================================
-void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionFactorSliderChange(int value)
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionCharacteristicDistanceChange(
+    int value)
 {
     qreal L = static_cast<qreal>(value) / 10.0;
     zv_infectionFactorLineEdit->setText(QString::number(L));
@@ -288,7 +296,7 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onRecoveryDurationSliderCha
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onRecoveryStartingDaySliderChange(int value)
 {
-    // set value to display
+    // set value to display (value - starting recovery day)
     zv_recoveryStartingDayLineEdit->setText(QString::number(value));
     // calc starting probability which gives the required starting day
     ZRecoveryProbabilityCalculator calculator;
@@ -300,6 +308,7 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onRecoveryStartingDaySlider
         {
             break;
         }
+
         probability = startingProbability;
         calculator.zp_setStartingProbability(startingProbability);
         calculator.zp_setRecoveryDurationFactor(0.2);

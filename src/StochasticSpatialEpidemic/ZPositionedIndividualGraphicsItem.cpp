@@ -59,7 +59,9 @@ void ZPositionedIndividualGraphicsItem::zp_setItemHealthState(int healthState)
 QRectF ZPositionedIndividualGraphicsItem::boundingRect() const
 {
     qreal half = zv_size / 2.0;
-    return QRectF(QPointF(half, half), QSizeF(zv_size, zv_size));
+    QRectF rect(QPointF(half, half), QSizeF(zv_size, zv_size));
+    rect.moveCenter(pos());
+    return rect;
 }
 //============================================================
 void ZPositionedIndividualGraphicsItem::paint(QPainter* painter,
@@ -68,8 +70,10 @@ void ZPositionedIndividualGraphicsItem::paint(QPainter* painter,
 {
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
-    painter->setBrush(zv_brushColor);
+
     painter->setPen(QPen(QBrush(Qt::black), 0.5));
+
+    painter->setBrush(zv_brushColor);
     painter->drawEllipse(boundingRect());
     painter->restore();
 

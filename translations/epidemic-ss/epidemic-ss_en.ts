@@ -207,5 +207,9 @@
         <source>Infection characteristic distance:</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>A distance at which the probability of infection is 0.5</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>

@@ -92,30 +92,33 @@ void ZInfectionProbabilityCalculator::recalcSafetyDistance()
     zv_safetyDistance = static_cast<qreal>(__INT64_MAX__);
     qreal min = 0;
     qreal mid;
-    qreal max = 100;
+    qreal max = 200;
     qreal pMid;
-    qreal saftyProbability = 0.99;
-    qreal precision = 0.001;
+    qreal infProbability = 0.01;
+    qreal precision = 0.01;
 
     for (int canary = 0; canary < 500; ++canary)
     {
         mid = min + (max - min) / 2;
-        pMid = 1.0 - (zv_infectionFactor * exp(-(mid / zv_L)));
-        if (qAbs(pMid - saftyProbability) < precision)
-        {
-            zv_safetyDistance = mid;
-            qDebug() << "SAFETY DISTANCE" << zv_safetyDistance;
-            return;
-        }
+        pMid = (zv_infectionFactor * exp(-(mid / zv_L)));
 
-        if (pMid < saftyProbability)
-        {
-            min = mid;
-        }
-        else
+        if (pMid <= infProbability)
         {
             max = mid;
         }
+        else
+        {
+            min = mid;
+        }
+
+        if ((max - min) < precision)
+        {
+            qDebug() << "SAFETY DISTANCE" << min;
+            zv_safetyDistance = min;
+            return;
+        }
     }
+
+    // zv_safetyDistance = static_cast<qreal>(__INT64_MAX__);
 }
 //============================================================

@@ -3,6 +3,7 @@
 #define ZHETEROGENEOUSPOPULATION_H
 //============================================================
 #include "ZAbstractPopulation.h"
+#include "ZDistance.h"
 #include "ZGenerationSettings.h"
 #include "ZStochasticHeterogeneousProcessCommon.h"
 
@@ -35,9 +36,7 @@ public slots:
     void zp_idListForHealthState(HealthStatus healthState, QList<quint64>& idList) const;
 
     void zp_idForIndex(int index, quint64& id, bool* ok = nullptr) const;
-    void zp_sortedDistansesForId(quint64 id,
-                                 QMultiMap<qreal, quint64>& distanceMap,
-                                 bool* ok = nullptr) const;
+    void zp_distansesForId(quint64 id, QList<ZDistance>& distances, bool* ok = nullptr) const;
     void zp_populationSize(quint64& size) const override;
     void zp_populationHealthStatus(QMap<int, quint64>& populationHealthStatus) const override;
     void zp_populationHealthStatusReport(

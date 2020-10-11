@@ -27,7 +27,7 @@ signals:
 
 private slots:
 
-    void zh_onInfectionFactorSliderChange(int value);
+    void zh_onInfectionCharacteristicDistanceChange(int value);
     void zh_onRecoveryDurationSliderChange(int value);
     void zh_onRecoveryStartingDaySliderChange(int value);
     void zh_onSpeedSliderChange(int value);
@@ -41,7 +41,7 @@ private:
     // VARS
     const int zv_maxStretch = 0xFFFFFF;
 
-    QSlider* zv_infectionFactorSlider;
+    QSlider* zv_infectionCharacteristicDistanceSlider;
     QSlider* zv_recoveryDurationSlider;
     QSlider* zv_recoveryStartingDaySlider;
     QLineEdit* zv_infectionFactorLineEdit;

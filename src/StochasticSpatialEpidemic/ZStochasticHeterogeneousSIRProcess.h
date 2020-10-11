@@ -3,6 +3,7 @@
 #define ZSIREPIDEMICPROCESS_H
 //============================================================
 #include "ZAbstractEpidemicProcess.h"
+#include "ZDistance.h"
 #include "ZStochasticHeterogeneousProcessCommon.h"
 //============================================================
 class QTimer;
@@ -33,9 +34,7 @@ signals:
     void zg_invokeSetHealthStatusForId(quint64 id,
                                        HealthStatus healthState,
                                        bool* ok = nullptr) const;
-    void zg_inquireDistancesForId(quint64 id,
-                                  QMultiMap<qreal, quint64>& distanceMap,
-                                  bool* ok = nullptr) const;
+    void zg_inquireDistancesForId(quint64 id, QList<ZDistance>& distances, bool* ok = nullptr) const;
     void zg_inquireIdForIndex(int index, quint64& id, bool* ok = nullptr) const;
     void zg_inquirePopulationSize(quint64& count) const;
     void zg_inquireIdListForHealthState(HealthStatus healthState, QList<quint64>& idList) const;
@@ -71,12 +70,9 @@ private:
     void zh_makeEpidemicStep();
 
     void zh_cureInfectious(QList<quint64>& infectiousList) const;
-    void zh_cureInfectious1(QList<quint64>& infectiousList) const;
     void zh_infectSusceptible(QList<quint64>& infectiousList, QList<quint64>& susceptibleList) const;
     bool zh_infectOneSusceptible(quint64 id, QList<quint64>& infectiousList) const;
 
-    void zh_infectSusceptible1(QList<quint64>& infectiousList,
-                               QList<quint64>& susceptibleList) const;
     void zh_pauseEpidemic();
 
     void zh_finishEpidemic();

@@ -53,19 +53,11 @@ void ZHeterogeneousPopulation::zh_createConnections()
             this,
             &ZHeterogeneousPopulation::zh_onPopulationStateChange);
 
-    //    connect(zv_distanceRepository,
-    //            &ZDistanceRepository::zg_inquirePositionForId,
-    //            this,
-    //            &ZHeterogeneousPopulation::zp_individualPosition);
     connect(zv_distanceRepository,
             &ZDistanceRepository::zg_inquireIndividualPositionHash,
             this,
             &ZHeterogeneousPopulation::zp_individualPositionHash);
 
-    connect(this,
-            &ZHeterogeneousPopulation::zg_individualRemoved,
-            zv_distanceRepository,
-            &ZDistanceRepository::zp_removeDistancesForId);
     connect(this,
             &ZHeterogeneousPopulation::zg_allIindividualsRemoved,
             zv_distanceRepository,
@@ -267,7 +259,9 @@ void ZHeterogeneousPopulation::zp_healthStateForId(quint64 id,
     }
 }
 //============================================================
-void ZHeterogeneousPopulation::zp_setHealthStateForId(quint64 id, HealthStatus healthState, bool* ok)
+void ZHeterogeneousPopulation::zp_setHealthStateForId(quint64 id,
+                                                      HealthStatus healthStatus,
+                                                      bool* ok)
 {
     ZPositionedIndividual* individual = zv_individualHash.value(id, nullptr);
     if (!individual)
@@ -279,8 +273,8 @@ void ZHeterogeneousPopulation::zp_setHealthStateForId(quint64 id, HealthStatus h
         return;
     }
 
-    HealthStatus state = static_cast<HealthStatus>(healthState);
-    individual->zp_setHealthState(state);
+    HealthStatus status = static_cast<HealthStatus>(healthStatus);
+    individual->zp_setHealthState(status);
 
     if (ok)
     {
@@ -363,9 +357,9 @@ void ZHeterogeneousPopulation::zp_idForIndex(int index, quint64& id, bool* ok) c
     return;
 }
 //============================================================
-void ZHeterogeneousPopulation::zp_sortedDistansesForId(quint64 id,
-                                                       QMultiMap<qreal, quint64>& distanceMap,
-                                                       bool* ok) const
+void ZHeterogeneousPopulation::zp_distansesForId(quint64 id,
+                                                 QList<ZDistance>& distances,
+                                                 bool* ok) const
 {
     if (!zv_individualHash.keys().contains(id))
     {
@@ -376,7 +370,7 @@ void ZHeterogeneousPopulation::zp_sortedDistansesForId(quint64 id,
         return;
     }
 
-    // zv_distanceRepository->zp_sortedDistancesForId(id, distanceMap);
+    zv_distanceRepository->zp_distancesForId(id, distances);
     if (ok)
     {
         *ok = true;

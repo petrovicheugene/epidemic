@@ -97,10 +97,10 @@ bool ZHeterogeneousPopulationDashBoard::zp_connect(QObject* component)
         component);
     if (widget)
     {
-        connect(this,
-                &ZHeterogeneousPopulationDashBoard::zg_plotRectChanged,
-                widget,
-                &ZHeterogeneousPopulationWidget::zp_setPlotRect);
+        //        connect(this,
+        //                &ZHeterogeneousPopulationDashBoard::zg_plotRectChanged,
+        //                widget,
+        //                &ZHeterogeneousPopulationWidget::zp_setPlotRect);
         connect(this,
                 &ZHeterogeneousPopulationDashBoard::zg_invokeSetMarkSize,
                 widget,
@@ -397,8 +397,8 @@ ZGenerationSettings ZHeterogeneousPopulationDashBoard::zh_createGenerationSettin
 
     if (settings.zp_distributionType() == ZGenerationSettings::DT_UNIFORM)
     {
-        int l = zv_plotLengthSpinBox->value();
-        int w = zv_plotWidthSpinBox->value();
+        qreal l = zv_plotLengthSpinBox->value();
+        qreal w = zv_plotWidthSpinBox->value();
         QRectF rect(QPointF(0.0, 0.0), QSizeF(l, w));
         settings.zp_setParameter(ZGenerationSettings::PN_PLOT_RECT, QVariant(rect));
     }

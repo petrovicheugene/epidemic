@@ -36,11 +36,6 @@ QList<QPointF> ZRandom2DPositionGenerator::zp_generate(ZGenerationSettings setti
         qreal dispersion = settings.zp_parameter(ZGenerationSettings::PN_DISPERSION).toDouble();
         QPointF center = settings.zp_parameter(ZGenerationSettings::PN_DISPERSION_CENTER).toPointF();
 
-        //        std::default_random_engine generatorX;
-        //        generatorX.seed(QDateTime::currentMSecsSinceEpoch());
-        //        std::default_random_engine generatorY;
-        //        generatorY.seed(QDateTime::currentMSecsSinceEpoch());
-
         std::default_random_engine generator;
         generator.seed(QDateTime::currentMSecsSinceEpoch());
         std::normal_distribution<double> distributionX(center.x(), dispersion);
