@@ -121,6 +121,7 @@ void ZHeterogeneousPopulationWidget::zp_addIndividualItem(quint64 id)
     item->zp_setItemHealthState(healthState);
 
     zv_scene->addItem(item);
+    zh_updateSceneRect(item);
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_addIndividualItemForSpec(
@@ -140,21 +141,10 @@ void ZHeterogeneousPopulationWidget::zp_addIndividualItemForSpec(
             &ZPositionedIndividualGraphicsItem::zg_pressed,
             this,
             &ZHeterogeneousPopulationWidget::zh_onIndividualItemMousePress);
+    zv_scene->addItem(item);
     item->setPos(position);
     item->zp_setItemHealthState(healthStatus);
-    zv_scene->addItem(item);
-
-    //    QRectF rect = zv_scene->itemsBoundingRect();
-    //    qDebug() << "NEW RECT" << rect;
-    //    qDebug() << "SCENE RECT" << zv_scene->sceneRect();
-
-    //    zv_scene->setSceneRect(rect);
-    //    if (!zv_scene->sceneRect().contains(rect))
-    //    {
-    //        zv_scene->setSceneRect(rect);
-    //    }
-    //zv_scene->setSceneRect(zv_scene->itemsBoundingRect());
-    //zv_scene->addItem(new QGraphicsRectItem(rect));
+    zh_updateSceneRect(item);
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_addIndividualItemForSpecList(
@@ -193,8 +183,8 @@ void ZHeterogeneousPopulationWidget::zp_removeAllItems() const
         delete item;
     }
 
-    //zv_scene->setSceneRect(zv_scene->itemsBoundingRect());
-    //    zv_scene->setSceneRect(QRectF(QPointF(0, 0), QSizeF(0.1, 0.1)));
+    zv_scene->setSceneRect(QRectF(-0.5, -0.5, 1.0, 1.0));
+    zp_fitInView();
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_setIndividualItemPosition(quint64 id, QPointF position) const
@@ -206,11 +196,6 @@ void ZHeterogeneousPopulationWidget::zp_setIndividualItemPosition(quint64 id, QP
     }
 
     item->setPos(position);
-    //    QRectF rect = zv_scene->itemsBoundingRect();
-    //    if (!rect.contains(item->pos()))
-    //    {
-    //        zv_scene->setSceneRect(rect);
-    //    }
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_setIndividualItemHealth(quint64 id,
@@ -223,11 +208,6 @@ void ZHeterogeneousPopulationWidget::zp_setIndividualItemHealth(quint64 id,
     }
 
     item->zp_setItemHealthState(healthState);
-}
-//============================================================
-void ZHeterogeneousPopulationWidget::zp_setPlotRect(QRectF rect) const
-{
-    //  zv_scene->setSceneRect(rect);
 }
 //============================================================
 void ZHeterogeneousPopulationWidget::zp_fitInView() const
@@ -256,5 +236,12 @@ ZPositionedIndividualGraphicsItem* ZHeterogeneousPopulationWidget::zh_itemForInd
     }
 
     return nullptr;
+}
+//============================================================
+void ZHeterogeneousPopulationWidget::zh_updateSceneRect(QGraphicsItem* item)
+{
+    QRectF itemRect = item->boundingRect();
+    itemRect.moveCenter(item->pos());
+    zv_scene->setSceneRect(zv_scene->sceneRect().united(itemRect));
 }
 //============================================================

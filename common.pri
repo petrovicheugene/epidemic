@@ -2,6 +2,10 @@
 LANGUAGES += en \ 
 ru\ 
 kk 
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
+QMAKE_CXXFLAGS += -Wall -Wextra  -pedantic
+#QMAKE_CXXFLAGS += -Wconversion
+QMAKE_CXXFLAGS -= -Wcomment
 
 PROJECT_ROOT_PATH = $${PWD}/ 
 
@@ -83,10 +87,6 @@ unix {
     } 
 } 
 
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter 
-QMAKE_CXXFLAGS += -Wall -Wextra  -pedantic
-QMAKE_CXXFLAGS += -Wconversion
-QMAKE_CXXFLAGS = -Wcomment
 
 # FUNCS 
 # creates translation file names for languages from LANGUAGES variable 

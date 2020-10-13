@@ -27,10 +27,12 @@ public:
     virtual void zp_populationHealthStatusReport(
         QMap<QString, quint64>& populationHealthStatus) const = 0;
     virtual quint64 zp_numberForHealthStatus(int healthStatus) const = 0;
+    virtual void zp_notifyPopulationHealthStatus() const = 0;
 
 signals:
     void zg_populationStateChangeNotification() const;
-    void zg_populationStateChanged(QMap<QString, quint64> populationHealthStatus) const;
+    void zg_populationStateChanged(QMap<QString, quint64> populationHealthStatus,
+                                   bool lastInStep = false) const;
     void zg_populationOperation(int operation, QString msg = QString()) const;
 };
 //============================================================

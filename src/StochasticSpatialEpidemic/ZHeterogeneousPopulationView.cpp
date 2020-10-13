@@ -5,7 +5,7 @@
 //============================================================
 ZHeterogeneousPopulationView::ZHeterogeneousPopulationView(QWidget* parent) : QGraphicsView(parent)
 {
-    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
+    // setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
 }
 //============================================================
 void ZHeterogeneousPopulationView::zp_setScene(QGraphicsScene* scene)

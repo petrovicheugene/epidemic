@@ -7,11 +7,13 @@
 #include <ZAbstractDashBoard.h>
 #include <QVariant>
 //============================================================
+class QCheckBox;
 class QLabel;
 class QLineEdit;
 class QPushButton;
 class QSlider;
 class QSpinBox;
+
 //============================================================
 class ZStochasticHeterogeneousSIRProcessDashBoard : public ZAbstractDashBoard
 {
@@ -24,6 +26,9 @@ public:
 signals:
 
     void zg_epidemicCommand(int, QVariant data = QVariant()) const;
+    void zg_clearCharts() const;
+    void zg_daysInCharts(int) const;
+    void zg_setClearChartsAutomaticallyFlag(bool) const;
 
 private slots:
 
@@ -36,6 +41,8 @@ private slots:
     void zh_onStopButtonClick();
     void zh_onClearButtonClick();
     void zp_onProcessStatusChange(int status, QVariant data);
+    void zh_onStepsInChartSliderChange(int value);
+    void zh_onClearChartsAutomaticallyCheckBoxToggle(bool toggled);
 
 private:
     // VARS
@@ -50,6 +57,12 @@ private:
 
     QSlider* zv_epidemicRateSlider;
 
+    QSlider* zv_stepsInCartSlider;
+    QLineEdit* zv_stepsInChartLineEdit;
+
+    QPushButton* zv_clearChartsButton;
+    QCheckBox* zv_autoClearChartCheckBox;
+
     QPushButton* zv_resetButton;
     QPushButton* zv_startPauseButton;
     QPushButton* zv_stopButton;
@@ -57,7 +70,7 @@ private:
     // FUNCS
     void zh_createComponents();
     void zh_createConnections();
-    void zh_applySettingsToProcess();
+    void zh_applySettingsToClients();
     void zh_saveSettings() const;
     void zh_restoreSettings();
 };

@@ -1,9 +1,11 @@
 //============================================================
 #include "ZStochasticHeterogeneousSIRProcessDashBoard.h"
 
+#include "ZEpidemicDynamicWidget.h"
 #include "ZRecoveryProbabilityCalculator.h"
 #include "ZStochasticHeterogeneousSIRProcess.h"
 
+#include <QCheckBox>
 #include <QDebug>
 #include <QDialogButtonBox>
 #include <QFontMetrics>
@@ -26,7 +28,7 @@ ZStochasticHeterogeneousSIRProcessDashBoard::ZStochasticHeterogeneousSIRProcessD
     zh_createComponents();
     zh_createConnections();
     zh_restoreSettings();
-    QMetaObject::invokeMethod(this, "zh_applySettingsToProcess", Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, "zh_applySettingsToClients", Qt::QueuedConnection);
 }
 //============================================================
 ZStochasticHeterogeneousSIRProcessDashBoard::~ZStochasticHeterogeneousSIRProcessDashBoard()
@@ -45,6 +47,9 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_saveSettings() const
     settings.setValue(zv_recoveryStartingDaySlider->objectName(),
                       zv_recoveryStartingDaySlider->value());
     settings.setValue(zv_epidemicRateSlider->objectName(), zv_epidemicRateSlider->value());
+    settings.setValue(zv_stepsInCartSlider->objectName(), zv_stepsInCartSlider->value());
+    settings.setValue(zv_autoClearChartCheckBox->objectName(),
+                      zv_autoClearChartCheckBox->isChecked());
 
     while (!settings.group().isEmpty())
     {
@@ -64,6 +69,9 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_restoreSettings()
     zv_recoveryStartingDaySlider->setValue(
         settings.value(zv_recoveryStartingDaySlider->objectName()).toInt());
     zv_epidemicRateSlider->setValue(settings.value(zv_epidemicRateSlider->objectName()).toInt());
+    zv_stepsInCartSlider->setValue(settings.value(zv_stepsInCartSlider->objectName()).toInt());
+    zv_autoClearChartCheckBox->setChecked(
+        settings.value(zv_autoClearChartCheckBox->objectName()).toBool());
 
     while (!settings.group().isEmpty())
     {
@@ -71,35 +79,66 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_restoreSettings()
     }
 }
 //============================================================
-void ZStochasticHeterogeneousSIRProcessDashBoard::zh_applySettingsToProcess()
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_applySettingsToClients()
 {
     zh_onRecoveryDurationSliderChange(zv_recoveryDurationSlider->value());
     zh_onRecoveryStartingDaySliderChange(zv_recoveryStartingDaySlider->value());
     zh_onSpeedSliderChange(zv_epidemicRateSlider->value());
     zh_onInfectionCharacteristicDistanceChange(zv_infectionCharacteristicDistanceSlider->value());
+    zh_onStepsInChartSliderChange(zv_stepsInCartSlider->value());
+    zh_onClearChartsAutomaticallyCheckBoxToggle(zv_autoClearChartCheckBox->isChecked());
 }
 //============================================================
 bool ZStochasticHeterogeneousSIRProcessDashBoard::zp_connect(QObject* component)
 {
-    ZStochasticHeterogeneousSIRProcess* process = qobject_cast<ZStochasticHeterogeneousSIRProcess*>(
-        component);
-    if (!process)
+    QString className = component->metaObject()->className();
+
+    if (className == "ZStochasticHeterogeneousSIRProcess")
+    {
+        ZStochasticHeterogeneousSIRProcess* process
+            = qobject_cast<ZStochasticHeterogeneousSIRProcess*>(component);
+        if (!process)
+        {
+            return false;
+        }
+
+        connect(this,
+                &ZStochasticHeterogeneousSIRProcessDashBoard::zg_epidemicCommand,
+                process,
+                &ZStochasticHeterogeneousSIRProcess::zp_dispatchCommand);
+
+        connect(process,
+                &ZStochasticHeterogeneousSIRProcess::zg_processChanged,
+                this,
+                &ZStochasticHeterogeneousSIRProcessDashBoard::zp_onProcessStatusChange);
+    }
+    else if (className == "ZEpidemicDynamicWidget")
+    {
+        ZEpidemicDynamicWidget* widget = qobject_cast<ZEpidemicDynamicWidget*>(component);
+        if (!widget)
+        {
+            return false;
+        }
+        connect(this,
+                &ZStochasticHeterogeneousSIRProcessDashBoard::zg_clearCharts,
+                widget,
+                &ZEpidemicDynamicWidget::zp_clearCharts);
+        connect(this,
+                &ZStochasticHeterogeneousSIRProcessDashBoard::zg_daysInCharts,
+                widget,
+                &ZEpidemicDynamicWidget::zp_setVisibleStepInChart);
+        connect(this,
+                &ZStochasticHeterogeneousSIRProcessDashBoard::zg_setClearChartsAutomaticallyFlag,
+                widget,
+                &ZEpidemicDynamicWidget::zp_setClearChartsAutomaticallyFlag);
+    }
+    else
     {
         return false;
     }
-
-    connect(this,
-            &ZStochasticHeterogeneousSIRProcessDashBoard::zg_epidemicCommand,
-            process,
-            &ZStochasticHeterogeneousSIRProcess::zp_dispatchCommand);
-
-    connect(process,
-            &ZStochasticHeterogeneousSIRProcess::zg_processChanged,
-            this,
-            &ZStochasticHeterogeneousSIRProcessDashBoard::zp_onProcessStatusChange);
-
     // zv_epidemicRateSlider->valueChanged(zv_epidemicRateSlider->value());
-    zh_applySettingsToProcess();
+
+    zh_applySettingsToClients();
     return true;
 }
 //============================================================
@@ -204,6 +243,38 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createComponents()
     zv_epidemicRateSlider->setTickInterval(100);
     groupBoxLayout->addWidget(zv_epidemicRateSlider);
 
+    // steps In Chart
+    groupBox = new QGroupBox(tr("Days in chart"));
+    mainLayout->addWidget(groupBox);
+    groupBoxLayout = new QVBoxLayout;
+    groupBox->setLayout(groupBoxLayout);
+
+    hLayout = new QHBoxLayout;
+    groupBoxLayout->addLayout(hLayout);
+    zv_stepsInCartSlider = new QSlider(Qt::Horizontal, this);
+    zv_stepsInCartSlider->setObjectName("stepsInCartSlider");
+    zv_stepsInCartSlider->setRange(1, 1000);
+    zv_stepsInCartSlider->setTickInterval(1);
+    hLayout->addWidget(zv_stepsInCartSlider);
+    zv_stepsInChartLineEdit = new QLineEdit(this);
+    zv_stepsInChartLineEdit->setReadOnly(false);
+    zv_stepsInChartLineEdit->setValidator(new QDoubleValidator);
+    zv_stepsInChartLineEdit->setFixedWidth(fm.horizontalAdvance("00000"));
+    hLayout->addWidget(zv_stepsInChartLineEdit);
+
+    // clear charts button
+    zv_clearChartsButton = new QPushButton("Clear charts");
+    hLayout = new QHBoxLayout;
+    mainLayout->addLayout(hLayout);
+    hLayout->addWidget(zv_clearChartsButton);
+
+    zv_autoClearChartCheckBox = new QCheckBox(this);
+    zv_autoClearChartCheckBox->setObjectName(tr("AutoClearChartCheckBox"));
+    zv_autoClearChartCheckBox->setText(tr("Clear automatically"));
+    hLayout->addWidget(zv_autoClearChartCheckBox);
+
+    hLayout->addStretch(zv_maxStretch);
+
     // basement
     mainLayout->addStretch(zv_maxStretch);
     QDialogButtonBox* dialogButtonBox = new QDialogButtonBox;
@@ -256,6 +327,20 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_createConnections()
             &QPushButton::clicked,
             this,
             &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onClearButtonClick);
+
+    connect(zv_clearChartsButton,
+            &QPushButton::clicked,
+            this,
+            &ZStochasticHeterogeneousSIRProcessDashBoard::zg_clearCharts);
+    connect(zv_stepsInCartSlider,
+            &QSlider::valueChanged,
+            this,
+            &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onStepsInChartSliderChange);
+
+    connect(zv_autoClearChartCheckBox,
+            &QCheckBox::toggled,
+            this,
+            &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onClearChartsAutomaticallyCheckBoxToggle);
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionCharacteristicDistanceChange(
@@ -264,6 +349,18 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onInfectionCharacteristicDi
     qreal L = static_cast<qreal>(value) / 10.0;
     zv_infectionFactorLineEdit->setText(QString::number(L));
     emit zg_epidemicCommand(EC_SET_L_PARAMETER, QVariant(L));
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onStepsInChartSliderChange(int value)
+{
+    zv_stepsInChartLineEdit->setText(QString::number(value));
+    emit zg_daysInCharts(value);
+}
+//============================================================
+void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onClearChartsAutomaticallyCheckBoxToggle(
+    bool toggled)
+{
+    zg_setClearChartsAutomaticallyFlag(toggled);
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcessDashBoard::zh_onRecoveryDurationSliderChange(int value)
@@ -387,5 +484,7 @@ void ZStochasticHeterogeneousSIRProcessDashBoard::zp_onProcessStatusChange(int s
                 &ZStochasticHeterogeneousSIRProcessDashBoard::zh_onStartButtonClick);
         break;
     }
+
+    Q_UNUSED(data)
 }
 //============================================================

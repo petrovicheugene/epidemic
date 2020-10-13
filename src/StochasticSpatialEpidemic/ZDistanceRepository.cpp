@@ -114,12 +114,11 @@ QHash<quint64, QHash<quint64, qreal>> ZDistanceRepository::zh_cacheFromWorkDista
 void ZDistanceRepository::zh_convertToWorkDistances(
     const QHash<quint64, QHash<quint64, qreal>>& distances)
 {
-    QHash<quint64, QList<ZDistance>> distanceCache; // total cache
-    QList<ZDistance> distanceList;                  // new row
+    QHash<quint64, QList<ZDistance>> distanceCache;
+    QList<ZDistance> distanceList;
 
-    QHash<quint64, QHash<quint64, qreal>>::const_iterator it; // total it
-    QHash<quint64, qreal>::const_iterator rowIt;              // row it
-
+    QHash<quint64, QHash<quint64, qreal>>::const_iterator it;
+    QHash<quint64, qreal>::const_iterator rowIt;
     for (it = distances.begin(); it != distances.end(); ++it)
     {
         distanceList.clear();

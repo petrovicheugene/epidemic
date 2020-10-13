@@ -1,20 +1,48 @@
 //============================================================
 #include "ZStochasticHeterogeneousProcessCommon.h"
 //============================================================
+QHash<HealthStatus, QString> healthStatusNames = initHealthStatusNames();
+//============================================================
+QHash<HealthStatus, QString> initHealthStatusNames()
+{
+    QHash<HealthStatus, QString> names;
+    names.insert(HS_NOT_DEFINED, QObject::tr("Not defined"));
+    names.insert(HS_SUSCEPTIBLE, QObject::tr("Susceptible"));
+    names.insert(HS_INFECTIOUS, QObject::tr("Infectious"));
+    names.insert(HS_RECOVERED, QObject::tr("Recovered"));
+    return names;
+}
+
+//============================================================
 QString healthStatusName(HealthStatus healthStatus)
+{
+    return healthStatusNames.value(healthStatus);
+}
+//============================================================
+QColor healthStatusColor(HealthStatus healthStatus)
 {
     switch (healthStatus)
     {
     case HS_NOT_DEFINED:
-        return QObject::tr("Not defined");
+        return QColor(Qt::transparent);
     case HS_SUSCEPTIBLE:
-        return QObject::tr("Susceptible");
+        return QColor(Qt::blue);
     case HS_INFECTIOUS:
-        return QObject::tr("Infectious");
+        return QColor(Qt::red);
     case HS_RECOVERED:
-        return QObject::tr("Recovered");
+        return QColor(Qt::green);
     }
 
-    return QString();
+    return QColor();
+}
+//============================================================
+QColor healthStatusColor(const QString& healthStatusName)
+{
+    return healthStatusColor(healthStatusForName(healthStatusName));
+}
+//============================================================
+HealthStatus healthStatusForName(const QString& healthStatusName)
+{
+    return healthStatusNames.key(healthStatusName);
 }
 //============================================================

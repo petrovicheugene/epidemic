@@ -5,6 +5,7 @@
 #include "ZStochasticHeterogeneousProcessCommon.h"
 #include <ZAbstractPopulationWidget.h>
 //============================================================
+class QGraphicsItem;
 class ZHeterogeneousPopulationScene;
 class ZHeterogeneousPopulationView;
 class ZPositionedIndividualGraphicsItem;
@@ -39,7 +40,6 @@ public slots:
     void zp_removeAllItems() const;
     void zp_setIndividualItemPosition(quint64 id, QPointF position) const;
     void zp_setIndividualItemHealth(quint64 id, HealthStatus healthState) const;
-    void zp_setPlotRect(QRectF rect) const;
     void zp_setMarkSize(int val) const;
     void zp_fitInView() const;
 
@@ -58,6 +58,8 @@ private:
     void zh_createComponents();
     void zh_createConnections();
     ZPositionedIndividualGraphicsItem* zh_itemForIndex(quint64 id) const;
+
+    void zh_updateSceneRect(QGraphicsItem* item);
 };
 //============================================================
 #endif // ZHETEROGENEOUSPOPULATIONVIEW_H

@@ -35,14 +35,6 @@ qreal ZInfectionProbabilityCalculator::zp_calcProbability(QList<qreal> distances
         for (i = 0; i < distances.count(); ++i)
         {
             stayHealthyProbability = 1.0 - (zv_infectionFactor * exp(-(distances.at(i) / zv_L)));
-            //            stayHealthyProbability = stayHealthyProbability < 0 ? stayHealthyProbability = 0
-            //                                                                : stayHealthyProbability;
-
-            //            if (stayHealthyProbability > 0.99 && saftyDistance > distances.at(i))
-            //            {
-            //                saftyDistance = distances.at(i);
-            //                qDebug() << "saftyDistance" << saftyDistance;
-            //            }
             product *= stayHealthyProbability;
         }
 
@@ -62,7 +54,6 @@ qreal ZInfectionProbabilityCalculator::zp_calcProbability(QList<qreal> distances
         //#pragma omp critical
         {
             zv_safetyDistance = qMin(zv_safetyDistance, saftyDistance);
-            //qDebug() << "ASSIGN zv_safetyDistance" << zv_safetyDistance;
         }
 
         //#pragma omp barrier

@@ -2,6 +2,8 @@
 #ifndef ZSTOCHASTICHETEROGENEOUSPROCESSCOMMON_H
 #define ZSTOCHASTICHETEROGENEOUSPROCESSCOMMON_H
 //============================================================
+#include <QColor>
+#include <QHash>
 #include <QObject>
 #include <QString>
 //============================================================
@@ -34,7 +36,10 @@ enum HealthStatus
     HS_RECOVERED = 3
 };
 
+QHash<HealthStatus, QString> initHealthStatusNames();
+HealthStatus healthStatusForName(const QString& healthStatusName);
 QString healthStatusName(HealthStatus healthStatus);
-
+QColor healthStatusColor(HealthStatus healthStatus);
+QColor healthStatusColor(const QString& healthStatusName);
 //============================================================
 #endif // ZSTOCHASTICHETEROGENEOUSPROCESSCOMMON_H

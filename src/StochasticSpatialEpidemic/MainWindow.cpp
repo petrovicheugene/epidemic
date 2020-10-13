@@ -29,7 +29,6 @@ MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
     zv_epidemicProcess = nullptr;
 
     zv_populationWidget = nullptr;
-    zv_groupDynamicChart = nullptr;
 
     zv_chartSplitter = nullptr;
     zv_epidemicProcessDashBoard = nullptr;
@@ -69,7 +68,6 @@ void MainWindow::zh_createComponents()
     // central widget
     zv_mainSplitter = new QSplitter(Qt::Horizontal);
     zv_mainSplitter->setObjectName("MainSplitter");
-
     setCentralWidget(zv_mainSplitter);
 
     // dashBoard
@@ -103,9 +101,7 @@ void MainWindow::zh_createComponents()
 
     // components
     zv_population = factory->zp_createPopulation();
-    // zv_population->setParent(this);
     zv_epidemicProcess = factory->zp_createEpidemicProcess();
-    // zv_epidemicProcess->setParent(this);
     processThread = new QThread(this);
     zv_epidemicProcess->moveToThread(processThread);
     zv_population->moveToThread(processThread);
@@ -122,22 +118,14 @@ void MainWindow::zh_createComponents()
 //============================================================
 void MainWindow::zh_createConnections()
 {
-    if (zv_epidemicProcess && zv_population)
-    {
-        zv_epidemicProcess->zp_setPopulation(zv_population);
-        zv_epidemicProcessDashBoard->zp_connect(zv_epidemicProcess);
-        zv_populationDashBoard->zp_connect(zv_population);
-    }
+    zv_epidemicProcess->zp_setPopulation(zv_population);
+    zv_epidemicProcessDashBoard->zp_connect(zv_epidemicProcess);
+    zv_populationDashBoard->zp_connect(zv_population);
 
-    if (zv_populationWidget && zv_population)
-    {
-        zv_populationWidget->zp_setPopulation(zv_population);
-    }
+    zv_populationWidget->zp_setPopulation(zv_population);
 
-    if (zv_populationWidget && zv_populationDashBoard)
-    {
-        zv_populationDashBoard->zp_connect(zv_populationWidget);
-    }
+    zv_populationDashBoard->zp_connect(zv_populationWidget);
+    zv_populationDashBoard->zp_connect(zv_epidemicDynamicWidget);
 
     connect(zv_population,
             &ZAbstractPopulation::zg_populationStateChanged,
@@ -148,34 +136,33 @@ void MainWindow::zh_createConnections()
             this,
             &MainWindow::zh_updatePopulationOperation);
 
-    //    connect(zv_population,
-    //            &ZAbstractPopulation::zg_populationStateChangeNotification,
-    //            this,
-    //            &MainWindow::zh_onPopulationStateChange);
-
-    //    connect(this,
-    //            &MainWindow::zg_inqueryPopulationSize,
-    //            zv_population,
-    //            &ZAbstractPopulation::zp_populationSize);
-
-    //    connect(this,
-    //            &MainWindow::zg_inqueryPopulationHealthStatusReport,
-    //            zv_population,
-    //            &ZAbstractPopulation::zp_populationHealthStatusReport);
-
     connect(zv_epidemicProcess,
             &ZAbstractEpidemicProcess::zg_epidemicFinished,
             this,
             &MainWindow::zh_onEpidemicFinish);
+
     connect(zv_epidemicProcess,
             &ZAbstractEpidemicProcess::zg_epidemicStep,
             this,
             &MainWindow::zh_updateStatusBarEpidemicStep);
 
-    //    connect(this,
-    //            &MainWindow::zg_inqueryEpidemicStep,
-    //            zv_epidemicProcess,
-    //            &ZAbstractEpidemicProcess::zp_processStep);
+    connect(zv_epidemicProcess,
+            &ZAbstractEpidemicProcess::zg_epidemicStep,
+            zv_population,
+            &ZAbstractPopulation::zp_notifyPopulationHealthStatus);
+
+    // charts
+    connect(zv_epidemicProcess,
+            &ZAbstractEpidemicProcess::zg_epidemicFinished,
+            zv_epidemicDynamicWidget,
+            &ZEpidemicDynamicWidget::zp_finishProcess);
+
+    connect(zv_population,
+            &ZAbstractPopulation::zg_populationStateChanged,
+            zv_epidemicDynamicWidget,
+            &ZEpidemicDynamicWidget::zp_updateCharts);
+
+    zv_epidemicProcessDashBoard->zp_connect(zv_epidemicDynamicWidget);
 }
 //============================================================
 ZAbstractFactory* MainWindow::zh_createFactory()

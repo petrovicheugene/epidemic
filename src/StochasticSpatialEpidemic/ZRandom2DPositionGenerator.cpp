@@ -26,8 +26,8 @@ QList<QPointF> ZRandom2DPositionGenerator::zp_generate(ZGenerationSettings setti
         QRectF rect = settings.zp_parameter(ZGenerationSettings::PN_PLOT_RECT).toRectF();
         for (int i = 0; i < count; ++i)
         {
-            qreal x = QRandomGenerator::global()->bounded(rect.height());
-            qreal y = QRandomGenerator::global()->bounded(rect.width());
+            qreal x = QRandomGenerator::global()->bounded(rect.height()) - rect.right();
+            qreal y = QRandomGenerator::global()->bounded(rect.width()) + rect.top();
             positionList.append(QPointF(x, y));
         }
     }

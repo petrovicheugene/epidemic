@@ -12,7 +12,6 @@ class ZAbstractPopulation;
 class ZAbstractPopulationWidget;
 class ZEpidemicDynamicWidget;
 
-class QChart;
 class QLabel;
 class QSplitter;
 
@@ -39,7 +38,6 @@ private:
     ZAbstractEpidemicProcess* zv_epidemicProcess;
 
     ZAbstractPopulationWidget* zv_populationWidget;
-    QChart* zv_groupDynamicChart;
 
     QSplitter* zv_mainSplitter;
     QSplitter* zv_chartSplitter;

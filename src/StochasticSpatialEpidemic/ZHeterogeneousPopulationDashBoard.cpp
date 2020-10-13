@@ -44,8 +44,6 @@ void ZHeterogeneousPopulationDashBoard::zh_saveSettings() const
                       zv_distributionComboBox->currentIndex());
     settings.setValue(zv_plotLengthSpinBox->objectName(), zv_plotLengthSpinBox->value());
     settings.setValue(zv_plotWidthSpinBox->objectName(), zv_plotWidthSpinBox->value());
-    settings.setValue(zv_centerXSpinBox->objectName(), zv_centerXSpinBox->value());
-    settings.setValue(zv_centerYSpinBox->objectName(), zv_centerYSpinBox->value());
     settings.setValue(zv_dispersionSpinBox->objectName(), zv_dispersionSpinBox->value());
 
     while (!settings.group().isEmpty())
@@ -66,8 +64,6 @@ void ZHeterogeneousPopulationDashBoard::zh_restoreSettings()
         settings.value(zv_distributionComboBox->objectName()).toInt());
     zv_plotLengthSpinBox->setValue(settings.value(zv_plotLengthSpinBox->objectName()).toDouble());
     zv_plotWidthSpinBox->setValue(settings.value(zv_plotWidthSpinBox->objectName()).toDouble());
-    zv_centerXSpinBox->setValue(settings.value(zv_centerXSpinBox->objectName()).toDouble());
-    zv_centerYSpinBox->setValue(settings.value(zv_centerYSpinBox->objectName()).toDouble());
     zv_dispersionSpinBox->setValue(settings.value(zv_dispersionSpinBox->objectName()).toDouble());
 
     while (!settings.group().isEmpty())
@@ -271,6 +267,7 @@ QWidget* ZHeterogeneousPopulationDashBoard::zh_createNormalSettingsWidget()
     zv_centerXSpinBox = new QDoubleSpinBox(this);
     zv_centerXSpinBox->setObjectName("centerXSpinBox");
     zv_centerXSpinBox->setRange(-99999, 99999);
+    zv_centerXSpinBox->setValue(0.0);
     hLayout->addWidget(zv_centerXSpinBox);
 
     label = new QLabel;
@@ -279,6 +276,7 @@ QWidget* ZHeterogeneousPopulationDashBoard::zh_createNormalSettingsWidget()
     zv_centerYSpinBox = new QDoubleSpinBox(this);
     zv_centerYSpinBox->setObjectName("centerYSpinBox");
     zv_centerYSpinBox->setRange(-99999, 99999);
+    zv_centerYSpinBox->setValue(0.0);
     hLayout->addWidget(zv_centerYSpinBox);
 
     hLayout->addStretch(zv_maxStretch);
@@ -400,6 +398,7 @@ ZGenerationSettings ZHeterogeneousPopulationDashBoard::zh_createGenerationSettin
         qreal l = zv_plotLengthSpinBox->value();
         qreal w = zv_plotWidthSpinBox->value();
         QRectF rect(QPointF(0.0, 0.0), QSizeF(l, w));
+        rect.moveCenter(QPointF(0.0, 0.0));
         settings.zp_setParameter(ZGenerationSettings::PN_PLOT_RECT, QVariant(rect));
     }
     else if (settings.zp_distributionType() == ZGenerationSettings::DT_NORMAL)

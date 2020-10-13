@@ -146,38 +146,6 @@ void ZHeterogeneousPopulation::zp_generate(QVariant vSettings)
                                          QString::number(elapsedSec % 60)));
 
     return;
-
-    //    // connect each new individual
-    //    for (int i = 0; i < idList.count(); ++i)
-    //    {
-    //        quint64 id = idList.at(i);
-
-    //        individual = zv_individuals.value(id);
-    //        connect(individual,
-    //                &ZPositionedIndividual::zg_healthStateChanged,
-    //                this,
-    //                &ZHeterogeneousPopulation::zg_individualHealthChanged);
-    //        connect(individual,
-    //                &ZPositionedIndividual::zg_positionChanged,
-    //                this,
-    //                &ZHeterogeneousPopulation::zg_individualPositionChanged);
-    //        connect(individual,
-    //                &ZPositionedIndividual::zg_positionChanged,
-    //                zv_distanceRepository,
-    //                &ZDistanceRepository::zp_onPositionChange);
-    //        if (i % 50 == 0)
-    //        {
-    //            emit zg_populationOperation(PO_GENERATING, QString::number(i));
-    //        }
-
-    //        emit zg_individualAdded(id);
-    //        //individual->zp_notifyPosition();
-    //    }
-
-    //    emit zg_populationOperation(PO_GENERATING, tr("Recalculating distances"));
-    //    //zv_distanceRepository->zp_recalcSortedDistanceMap();
-    //    emit zg_populationOperation(PO_READY,
-    //                                tr(" Elapsed %1 s.").arg(QString::number(timer.elapsed() / 1000)));
 }
 //============================================================
 void ZHeterogeneousPopulation::zp_clear()
@@ -418,6 +386,13 @@ quint64 ZHeterogeneousPopulation::zp_numberForHealthStatus(int healthStatus) con
     }
 
     return count;
+}
+//============================================================
+void ZHeterogeneousPopulation::zp_notifyPopulationHealthStatus() const
+{
+    QMap<QString, quint64> populationHealthStatus;
+    zp_populationHealthStatusReport(populationHealthStatus);
+    emit zg_populationStateChanged(populationHealthStatus, true);
 }
 //============================================================
 void ZHeterogeneousPopulation::zh_onPopulationStateChange() const

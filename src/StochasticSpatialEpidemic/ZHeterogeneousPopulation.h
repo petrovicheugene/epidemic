@@ -43,6 +43,7 @@ public slots:
         QMap<QString, quint64>& populationHealthStatus) const override;
 
     quint64 zp_numberForHealthStatus(int healthStatus) const override;
+    void zp_notifyPopulationHealthStatus() const override;
 
 signals:
 

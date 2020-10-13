@@ -211,5 +211,17 @@
         <source>A distance at which the probability of infection is 0.5</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Days in chart</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear automatically</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AutoClearChartCheckBox</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>

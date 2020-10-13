@@ -1,5 +1,6 @@
 //============================================================
 #include "ZPositionedIndividualGraphicsItem.h"
+#include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 //============================================================
@@ -43,6 +44,7 @@ ZPositionedIndividualGraphicsItem::ZPositionedIndividualGraphicsItem(quint64 id,
 void ZPositionedIndividualGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
     emit zg_pressed(zv_id);
+    Q_UNUSED(event);
 }
 //============================================================
 quint64 ZPositionedIndividualGraphicsItem::zp_id()
@@ -58,9 +60,7 @@ void ZPositionedIndividualGraphicsItem::zp_setItemHealthState(int healthState)
 //============================================================
 QRectF ZPositionedIndividualGraphicsItem::boundingRect() const
 {
-    qreal half = zv_size / 2.0;
-    QRectF rect(QPointF(half, half), QSizeF(zv_size, zv_size));
-    rect.moveCenter(pos());
+    QRectF rect(QPointF(-zv_size / 2, -zv_size / 2), QSizeF(zv_size, zv_size));
     return rect;
 }
 //============================================================

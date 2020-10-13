@@ -27,8 +27,5 @@ public:
     qreal zv_distance;
 };
 //============================================================
-//bool operator==(const ZDistance& left, const ZDistance& right);
-//bool operator>(const ZDistance& left, const ZDistance& right);
-//bool operator<(const ZDistance& left, const ZDistance& right);
 
 #endif // ZDISTANCE_H
