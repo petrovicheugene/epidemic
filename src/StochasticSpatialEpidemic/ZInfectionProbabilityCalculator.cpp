@@ -23,9 +23,9 @@ qreal ZInfectionProbabilityCalculator::zp_calcProbability(QList<qreal> distances
     qreal stayHealthyProbability;
 
     //#pragma omp parallel shared(distances, commonProduct) private(i, \
-//                                                              product, \
-//                                                              saftyDistance, \
-//                                                              stayHealthyProbability)
+    //                                                              product, \
+    //                                                              saftyDistance, \
+    //                                                              stayHealthyProbability)
     {
         product = 1.0;
         commonProduct = 1.0;
@@ -104,7 +104,6 @@ void ZInfectionProbabilityCalculator::recalcSafetyDistance()
 
         if ((max - min) < precision)
         {
-            qDebug() << "SAFETY DISTANCE" << min;
             zv_safetyDistance = min;
             return;
         }

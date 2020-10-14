@@ -18,7 +18,6 @@ public:
     explicit ZStochasticHeterogeneousSIRProcess(QObject* parent = nullptr);
 
     void zp_setPopulation(ZAbstractPopulation* population) override;
-    QStringList zp_groupList() const override;
 
 public slots:
 
@@ -76,7 +75,6 @@ private:
     void zh_pauseEpidemic();
 
     void zh_finishEpidemic();
-    void zh_recalcRecoveryProbability(QVariant data);
     void zh_setTimerInterval(QVariant data);
     void zh_setTimerInterval(int interval);
 

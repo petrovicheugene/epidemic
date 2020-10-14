@@ -15,7 +15,6 @@ class ZAbstractEpidemicProcess : public QObject
 public:
     explicit ZAbstractEpidemicProcess(QObject* parent = nullptr);
     virtual void zp_setPopulation(ZAbstractPopulation* population) = 0;
-    virtual QStringList zp_groupList() const = 0;
 
 public slots:
 

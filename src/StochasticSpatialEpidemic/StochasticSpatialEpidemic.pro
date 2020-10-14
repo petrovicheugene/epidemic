@@ -4,25 +4,27 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 
 #PRO VARS
-TARGET = epidemic-ss
+TARGET = epidemic
 #Open MP
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS +=  -fopenmp
 LIBS += -fopenmp
 #Application version
-#RC_ICONS = "ZImages/SRVLab-8.ico"
+RC_ICONS = "virus-2.ico"
 
-VER_MAJ=0
+VER_MAJ=1
 VER_MIN=0
 VER_PAT=0
-VER_BUILD=b
 
-QMAKE_TARGET_PRODUCT="Stochastic Spatial Epidemic"
-QMAKE_TARGET_DESCRIPTION="Stochastic Spatial Epidemic"
+QMAKE_TARGET_PRODUCT="Epidemic"
+QMAKE_TARGET_DESCRIPTION="Modeling of the epidemic spread"
 QMAKE_TARGET_COMPANY="Eugene Petrovich"
 QMAKE_TARGET_COPYRIGHT="Copyright © $${QMAKE_TARGET_COMPANY}. 2020.  All rights reserved."
-COMPANY_URL=www.eugenepetrovich.com
-
+#COMPANY_URL=www.eugenepetrovich.com
+#PRODUCT_URL=www.bunqer_product.com
+AUTHOR="Eugene Petrovich"
+#AUTHORS_URL = www.bunqer_author.com
+AUTHORS_EMAIL="petrovich.eugene@gmail.com"
 #-------------------------------------------------
 # in common.pri will be defined VERSION, TARGET, DEBUG SETTINGS
 #  global APP DEFINES
@@ -31,8 +33,6 @@ include( ../../common.pri )
 include( ../../app.pri )
 
 #END
-
-
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -95,3 +95,6 @@ HEADERS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc

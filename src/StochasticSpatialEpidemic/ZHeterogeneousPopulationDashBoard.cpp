@@ -397,7 +397,7 @@ ZGenerationSettings ZHeterogeneousPopulationDashBoard::zh_createGenerationSettin
     {
         qreal l = zv_plotLengthSpinBox->value();
         qreal w = zv_plotWidthSpinBox->value();
-        QRectF rect(QPointF(0.0, 0.0), QSizeF(l, w));
+        QRectF rect(QPointF(0.0, 0.0), QSizeF(w, l));
         rect.moveCenter(QPointF(0.0, 0.0));
         settings.zp_setParameter(ZGenerationSettings::PN_PLOT_RECT, QVariant(rect));
     }

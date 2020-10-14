@@ -14,6 +14,7 @@ class ZEpidemicDynamicWidget;
 
 class QLabel;
 class QSplitter;
+class QToolButton;
 
 //============================================================
 class MainWindow : public ZBaseMainWindow
@@ -47,11 +48,13 @@ private:
     QLabel* zv_populationSizeStatusBarLabel;
     QLabel* zv_epidemicDayLabel;
     QLabel* zv_populationHealthStatusBarLabel;
-
+    QLabel* zv_infoMenuLabel;
+    const int zv_maxStretch = 999999;
     //FUNCS
 
     void zh_createComponents();
     void zh_createConnections();
+    void zh_createMenu();
     ZAbstractFactory* zh_createFactory();
     void zh_saveSettings() const override;
     void zh_restoreSettings() override;

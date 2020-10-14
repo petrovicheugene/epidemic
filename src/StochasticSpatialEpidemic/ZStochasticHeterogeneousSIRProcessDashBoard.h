@@ -43,6 +43,7 @@ private slots:
     void zp_onProcessStatusChange(int status, QVariant data);
     void zh_onStepsInChartSliderChange(int value);
     void zh_onClearChartsAutomaticallyCheckBoxToggle(bool toggled);
+    void zh_applySettingsToClients();
 
 private:
     // VARS
@@ -70,7 +71,6 @@ private:
     // FUNCS
     void zh_createComponents();
     void zh_createConnections();
-    void zh_applySettingsToClients();
     void zh_saveSettings() const;
     void zh_restoreSettings();
 };

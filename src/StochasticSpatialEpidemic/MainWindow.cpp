@@ -16,6 +16,7 @@
 #include <QSettings>
 #include <QSplitter>
 #include <QThread>
+#include <QToolButton>
 #include <QVBoxLayout>
 //============================================================
 MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
@@ -37,6 +38,7 @@ MainWindow::MainWindow(QWidget* parent) : ZBaseMainWindow(parent)
 
     zh_createComponents();
     zh_createConnections();
+    zh_createMenu();
 
     zh_restoreSettings();
     zh_updateStatusBarPopulationState();
@@ -111,6 +113,7 @@ void MainWindow::zh_createComponents()
     zv_populationSizeStatusBarLabel = new QLabel(this);
     zv_populationHealthStatusBarLabel = new QLabel(this);
     zv_epidemicDayLabel = new QLabel(this);
+
     statusBar()->addWidget(zv_populationSizeStatusBarLabel);
     statusBar()->addWidget(zv_epidemicDayLabel);
     statusBar()->addWidget(zv_populationHealthStatusBarLabel);
@@ -163,6 +166,16 @@ void MainWindow::zh_createConnections()
             &ZEpidemicDynamicWidget::zp_updateCharts);
 
     zv_epidemicProcessDashBoard->zp_connect(zv_epidemicDynamicWidget);
+}
+//============================================================
+void MainWindow::zh_createMenu()
+{
+    QMenu* aboutMenu = new QMenu;
+    aboutMenu->setIcon(QIcon(":/images/info.png"));
+    aboutMenu->addAction(zv_aboutAction);
+    aboutMenu->addAction(zv_aboutQtAction);
+
+    menuBar()->addMenu(aboutMenu);
 }
 //============================================================
 ZAbstractFactory* MainWindow::zh_createFactory()

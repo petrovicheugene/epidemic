@@ -9,31 +9,30 @@
 //============================================================
 enum ProcessStatus
 {
-    PS_STOPPED = 1,
-    PS_RUNNING = 2,
-    PS_SUSPENDED = 3
+    PS_STOPPED,
+    PS_RUNNING,
+    PS_SUSPENDED
 };
 
 enum EpidemicCommand
 {
-    EC_STOP = 1,
-    EC_RUN = 2,
-    EC_PAUSE = 3,
-    EC_RESET_HEALTH_STATUS = 4,
-    EC_SET_TIMER_INTERVAL = 5,
-    EC_RECALC_RECOVERY_PROBABILITY = 6,
-    EC_SET_L_PARAMETER = 7,
-    EC_SET_RECOVERY_DURATION_FACTOR = 8,
-    EC_SET_STARTING_RECOVERY_PROBABILITY = 9
+    EC_STOP,
+    EC_RUN,
+    EC_PAUSE,
+    EC_RESET_HEALTH_STATUS,
+    EC_SET_TIMER_INTERVAL,
+    EC_SET_L_PARAMETER,
+    EC_SET_RECOVERY_DURATION_FACTOR,
+    EC_SET_STARTING_RECOVERY_PROBABILITY
 
 };
 
 enum HealthStatus
 {
-    HS_NOT_DEFINED = 0,
-    HS_SUSCEPTIBLE = 1,
-    HS_INFECTIOUS = 2,
-    HS_RECOVERED = 3
+    HS_NOT_DEFINED,
+    HS_SUSCEPTIBLE,
+    HS_INFECTIOUS,
+    HS_RECOVERED
 };
 
 QHash<HealthStatus, QString> initHealthStatusNames();

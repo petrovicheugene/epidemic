@@ -14,6 +14,11 @@
  * mouseButtonRelese  and preventing closing of the menu after 
  * an dockWidgetVisible action being toggled  
  * 
+ *  qApp properties:
+ *  appIcon
+ *  author
+ *  email
+ * 
 */
 //======================================================
 #ifndef ZMAINWINDOWBASE_H

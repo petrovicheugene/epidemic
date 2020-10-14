@@ -90,8 +90,7 @@ void messageHandler(QtMsgType type, const QMessageLogContext& context, const QSt
     }
 }
 
-template<typename MainWindow>
-int mainActions(int argc, char* argv[])
+template <typename MainWindow> int mainActions(int argc, char* argv[])
 {
     QTextCodec* codec = QTextCodec::codecForName("windows-1251");
     QTextCodec::setCodecForLocale(codec);
@@ -117,15 +116,40 @@ int mainActions(int argc, char* argv[])
     qApp->setProperty("appCopyright", QString(APP_COPYRIGHT));
 #endif
 #ifdef APP_ICON
-    qApp->setProperty("appIcon", QString(APP_ICON));
+    if (QFile(QString(APP_ICON)).exists())
+    {
+        qApp->setProperty("appIcon", QString(APP_ICON));
+    }
+    else if (QFile(":/" + QString(APP_ICON)).exists())
+    {
+        qApp->setProperty("appIcon", ":/" + QString(APP_ICON));
+    }
+    else if (QFile(":/images/" + QString(APP_ICON)).exists())
+    {
+        qApp->setProperty("appIcon", ":/images/" + QString(APP_ICON));
+    }
+
 #endif
 #ifdef APP_DESCRIPTION
     qApp->setProperty("appDescription", QString(APP_DESCRIPTION));
 #endif
+#ifdef APP_PRODUCT_URL
+    qApp->setProperty("appProductURL", QString(APP_PRODUCT_URL));
+#endif
+#ifdef APP_AUTHOR
+    qApp->setProperty("appAuthor", QString(APP_AUTHOR));
+#endif
+#ifdef APP_AUTHORS_URL
+    qApp->setProperty("appAuthorsURL", QString(APP_AUTHORS_URL));
+#endif
+#ifdef APP_AUTHORS_EMAIL
+    qApp->setProperty("email", QString(APP_AUTHORS_EMAIL));
+#endif
 
-    qApp->setStyleSheet(" QSplitter::handle:horizontal {border: 1px outset darkgrey;} "
-                        " QSplitter::handle:vertical{border: 1px outset darkgrey;}");
-
+    //    qApp->setStyleSheet("QSplitter::handle:vertical {height: 4px; image: "
+    //                        "url(:/images/ZImages/vSplitterHandler.png);}"
+    //                        "QSplitter::handle:horizontal {width: 4px; image: "
+    //                        "url(:/images/ZImages/hSplitterHandler.png);}");
     QOperatingSystemVersion currentOS = QOperatingSystemVersion::current();
     if (currentOS >= QOperatingSystemVersion(QOperatingSystemVersion::Windows10))
     {

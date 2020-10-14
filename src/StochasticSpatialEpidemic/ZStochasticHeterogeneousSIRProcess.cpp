@@ -38,6 +38,7 @@ void ZStochasticHeterogeneousSIRProcess::zh_createConnections()
 void ZStochasticHeterogeneousSIRProcess::timerEvent(QTimerEvent* event)
 {
     zh_makeEpidemicStep();
+    Q_UNUSED(event)
 }
 //============================================================
 void ZStochasticHeterogeneousSIRProcess::zp_setPopulation(ZAbstractPopulation* abstractPopulation)
@@ -101,10 +102,6 @@ void ZStochasticHeterogeneousSIRProcess::zp_setPopulation(ZAbstractPopulation* a
             &ZHeterogeneousPopulation::zp_setHealthStatus);
 }
 //============================================================
-QStringList ZStochasticHeterogeneousSIRProcess::zp_groupList() const
-{
-}
-//============================================================
 void ZStochasticHeterogeneousSIRProcess::zp_onPopulationChange()
 {
     if (zv_processStatus == PS_STOPPED)
@@ -134,9 +131,6 @@ void ZStochasticHeterogeneousSIRProcess::zp_dispatchCommand(int command, QVarian
         break;
     case EC_SET_TIMER_INTERVAL:
         zh_setTimerInterval(data);
-        break;
-    case EC_RECALC_RECOVERY_PROBABILITY:
-        zh_recalcRecoveryProbability(data);
         break;
     case EC_SET_L_PARAMETER:
         zh_setLParameter(data);
@@ -344,10 +338,7 @@ void ZStochasticHeterogeneousSIRProcess::zh_setProcessStatus(ProcessStatus statu
     zv_processStatus = status;
     emit zg_processChanged(zv_processStatus);
 }
-//============================================================
-void ZStochasticHeterogeneousSIRProcess::zh_recalcRecoveryProbability(QVariant data)
-{
-}
+
 //============================================================
 void ZStochasticHeterogeneousSIRProcess::zh_setLParameter(QVariant data)
 {
