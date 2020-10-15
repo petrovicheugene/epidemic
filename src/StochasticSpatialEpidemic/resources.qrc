@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>info.png</file>
+        <file>virus-2.ico</file>
+    </qresource>
+</RCC>
